@@ -22,3 +22,6 @@ target
 
 # Superpowers brainstorming/planning docs are working notes, not shipped docs
 docs/superpowers/
+
+# oh-my-claudecode local runtime/session state
+.omc/
