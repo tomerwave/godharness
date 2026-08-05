@@ -31,7 +31,7 @@ fn check_succeeds_with_no_repository_standards() {
 
     let report = run_check(&root.path).expect("check should succeed with just the suite");
 
-    assert_eq!(report.standard_count, 9);
+    assert_eq!(report.standard_count, 13);
 }
 
 #[test]
@@ -45,7 +45,7 @@ fn check_merges_a_valid_repository_standard() {
 
     let report = run_check(&root.path).expect("check should succeed with a valid custom standard");
 
-    assert_eq!(report.standard_count, 10);
+    assert_eq!(report.standard_count, 14);
 }
 
 #[test]

@@ -4,10 +4,6 @@ use crate::standard::{Standard, StandardError, parse_standard};
 
 const RECOMMENDED_V1_DOCUMENTS: &[(&str, &str)] = &[
     (
-        "suites/recommended/v1/no-comments.md",
-        include_str!("../suites/recommended/v1/no-comments.md"),
-    ),
-    (
         "suites/recommended/v1/naming.md",
         include_str!("../suites/recommended/v1/naming.md"),
     ),
@@ -38,6 +34,26 @@ const RECOMMENDED_V1_DOCUMENTS: &[(&str, &str)] = &[
     (
         "suites/recommended/v1/architecture-decisions.md",
         include_str!("../suites/recommended/v1/architecture-decisions.md"),
+    ),
+    (
+        "suites/recommended/v1/prefer-existing-solutions.md",
+        include_str!("../suites/recommended/v1/prefer-existing-solutions.md"),
+    ),
+    (
+        "suites/recommended/v1/design-for-extension.md",
+        include_str!("../suites/recommended/v1/design-for-extension.md"),
+    ),
+    (
+        "suites/recommended/v1/simplify-before-done.md",
+        include_str!("../suites/recommended/v1/simplify-before-done.md"),
+    ),
+    (
+        "suites/recommended/v1/verify-through-real-path.md",
+        include_str!("../suites/recommended/v1/verify-through-real-path.md"),
+    ),
+    (
+        "suites/recommended/v1/automate-everything.md",
+        include_str!("../suites/recommended/v1/automate-everything.md"),
     ),
 ];
 
