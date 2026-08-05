@@ -19,6 +19,23 @@ fn standard(id: &str, keywords: &[&str], paths: &[&str], must_read: bool) -> Sta
 }
 
 #[test]
+fn resolved_entry_carries_the_full_json_contract() {
+    let mut source = standard("source", &["trigger"], &[], false);
+    source.relates_to = vec!["sibling".to_string()];
+    let sibling = standard("sibling", &[], &[], false);
+
+    let graph = build_graph(vec![source, sibling]).expect("graph should build");
+
+    let resolved = resolve(&graph, Some("trigger word"), &[]);
+
+    assert_eq!(resolved.len(), 1);
+    assert_eq!(resolved[0].id, "source");
+    assert_eq!(resolved[0].path, "source.md");
+    assert_eq!(resolved[0].rule, "Rule for source.");
+    assert_eq!(resolved[0].relates_to, vec!["sibling".to_string()]);
+}
+
+#[test]
 fn matches_by_keyword() {
     let graph =
         build_graph(vec![standard("errors", &["error"], &[], false)]).expect("graph should build");

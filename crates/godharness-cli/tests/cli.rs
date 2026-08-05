@@ -56,6 +56,16 @@ fn context_prints_the_must_read_standards_as_json() {
         .collect();
 
     assert_eq!(ids, vec!["no-comments", "secrets-and-security"]);
+
+    let no_comments = &entries[0];
+    assert_eq!(no_comments["id"], "no-comments");
+    assert_eq!(no_comments["path"], "suites/recommended/v1/no-comments.md");
+    assert!(
+        no_comments["rule"]
+            .as_str()
+            .is_some_and(|rule| !rule.is_empty())
+    );
+    assert_eq!(no_comments["relates-to"], serde_json::json!(["naming"]));
 }
 
 #[test]
