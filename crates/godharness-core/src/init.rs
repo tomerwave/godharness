@@ -6,7 +6,7 @@ const STARTER_STANDARD: &str = "\
 ---
 id: example
 title: Example Standard
-keywords: [example]
+keywords: []
 paths: []
 must-read: false
 supersedes: []
