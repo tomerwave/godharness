@@ -5,9 +5,11 @@ use serde::Deserialize;
 
 pub mod graph;
 pub mod standard;
+pub mod suite;
 
 pub use graph::{EdgeKind, GraphError, StandardGraph, build_graph, content_hash};
 pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
+pub use suite::recommended_v1;
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct Config {
