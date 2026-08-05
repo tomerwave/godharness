@@ -17,4 +17,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: tomerwave/godlint@v1
+      - uses: tomerwave/godlint@7d079a7f4cdcf4dbb02f85aad8e3cc20feeaa544 # v1
