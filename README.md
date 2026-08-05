@@ -191,10 +191,21 @@ decision rationale.
 
 ## Open Decisions
 
-- Exact standard frontmatter schema and selectors.
-- Priority, precedence, and conflict-reporting rules.
-- How a project extends or overrides a recommended standard.
-- The minimal universal core that every task receives.
 - Adapter protocol and installation model for each supported agent.
 - The first Godlint-to-Godharness rationale-linking contract.
+- Conflict-reporting between two standards whose content disagrees (as opposed to resolution
+  order, which is decided — see below).
+
+Decided since this section was first written, with the implementation in
+`crates/godharness-core`:
+
+- Standard frontmatter schema and selectors: `id`, `title`, `keywords`, `paths`, `must-read`,
+  `supersedes`, `relates-to`; word-boundary keyword matching; glob path matching.
+- Resolution precedence: a must-read standard always resolves regardless of prompt or changed
+  paths; `supersedes` suppresses the standard it names; `relates-to` surfaces a neighbor
+  alongside a match.
+- Extension model: a repository adds standards through the `standards` globs in
+  `godharness.yaml`. Overriding an existing standard means superseding it under a new id —
+  reusing an existing id is a duplicate-id error, not a silent override.
+- The minimal universal core every task receives: whichever standards are marked `must-read`.
 
