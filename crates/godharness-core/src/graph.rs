@@ -63,6 +63,10 @@ impl StandardGraph {
             .collect()
     }
 
+    pub fn standards(&self) -> impl Iterator<Item = &Standard> {
+        self.graph.node_weights()
+    }
+
     pub fn len(&self) -> usize {
         self.graph.node_count()
     }

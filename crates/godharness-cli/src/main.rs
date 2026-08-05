@@ -67,14 +67,15 @@ fn run_check() -> ExitCode {
 }
 
 fn run_context(prompt: Option<String>, paths: Vec<String>) -> ExitCode {
-    let config = godharness_core::Config {
-        version: 1,
-        suites: Vec::new(),
-        standards: Vec::new(),
-        adapters: Default::default(),
+    let graph = match godharness_core::load_repository_graph(&current_dir()) {
+        Ok(graph) => graph,
+        Err(error) => {
+            eprintln!("godharness context: {error}");
+            return ExitCode::FAILURE;
+        }
     };
-    let resolved = godharness_core::resolve(&config, prompt.as_deref(), &paths);
-    let json = serde_json::to_string(&resolved.standards).unwrap_or_else(|_| "[]".to_string());
+    let resolved = godharness_core::resolve(&graph, prompt.as_deref(), &paths);
+    let json = serde_json::to_string(&resolved).unwrap_or_else(|_| "[]".to_string());
     println!("{json}");
     ExitCode::SUCCESS
 }
