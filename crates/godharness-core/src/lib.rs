@@ -3,8 +3,10 @@ use std::fmt;
 
 use serde::Deserialize;
 
+pub mod graph;
 pub mod standard;
 
+pub use graph::{EdgeKind, GraphError, StandardGraph, build_graph, content_hash};
 pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
