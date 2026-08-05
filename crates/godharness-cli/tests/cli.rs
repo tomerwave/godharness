@@ -55,17 +55,30 @@ fn context_prints_the_must_read_standards_as_json() {
         .map(|entry| entry["id"].as_str().expect("id should be a string"))
         .collect();
 
-    assert_eq!(ids, vec!["no-comments", "secrets-and-security"]);
+    assert_eq!(
+        ids,
+        vec![
+            "secrets-and-security",
+            "simplify-before-done",
+            "verify-through-real-path",
+        ]
+    );
 
-    let no_comments = &entries[0];
-    assert_eq!(no_comments["id"], "no-comments");
-    assert_eq!(no_comments["path"], "suites/recommended/v1/no-comments.md");
+    let secrets_and_security = &entries[0];
+    assert_eq!(secrets_and_security["id"], "secrets-and-security");
+    assert_eq!(
+        secrets_and_security["path"],
+        "suites/recommended/v1/secrets-and-security.md"
+    );
     assert!(
-        no_comments["rule"]
+        secrets_and_security["rule"]
             .as_str()
             .is_some_and(|rule| !rule.is_empty())
     );
-    assert_eq!(no_comments["relates-to"], serde_json::json!(["naming"]));
+    assert_eq!(
+        secrets_and_security["relates-to"],
+        serde_json::json!(["configuration-boundaries"])
+    );
 }
 
 #[test]

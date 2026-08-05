@@ -5,7 +5,7 @@ keywords: [naming, name, rename, variable name, function name]
 paths: []
 must-read: false
 supersedes: []
-relates-to: [no-comments, small-focused-units]
+relates-to: [small-focused-units]
 ---
 
 ## Rule
