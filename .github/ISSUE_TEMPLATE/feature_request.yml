@@ -1,0 +1,72 @@
+name: Feature request
+description: Propose a capability that is not a standard/schema change.
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a change to the default suite or schema, use the standard proposal template
+        instead. Do not include proprietary code.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: >-
+        What can a user or an agent adapter not do today, and what do they do instead?
+        Describe the situation, not the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed capability
+      description: >-
+        What should Godharness do? Name the command, configuration key, or JSON field
+        involved.
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Observable contract
+      description: >-
+        What exactly does a caller see? Include the command line, the output, and the exit
+        code. Determinism is a product requirement, so state what makes the result stable
+        across runs and machines.
+      placeholder: |
+        Command:
+        Output:
+        Exit code:
+        What keeps it deterministic:
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: What this needs
+      options:
+        - Existing resolver/config only
+        - A new CLI command or output field
+        - Configuration schema change
+        - A new or changed adapter
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: >-
+        What else would solve the problem, including doing nothing or using an existing
+        tool? Godharness delegates deliberately — see the README's "Explicit Non-Goals."
+    validations:
+      required: true
+  - type: textarea
+    id: breakage
+    attributes:
+      label: Compatibility
+      description: >-
+        Would this change existing output, exit codes, or configuration? Say so plainly,
+        including "no".
+    validations:
+      required: true

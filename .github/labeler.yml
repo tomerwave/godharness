@@ -1,0 +1,31 @@
+# Path-based labels only. Precedence, schema, and resolver decisions are not codifiable from
+# changed paths alone and stay a human review judgment, not a label.
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - "*.md"
+
+core:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/godharness-core/**
+
+cli:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/godharness-cli/**
+
+adapter:
+  - changed-files:
+      - any-glob-to-any-file:
+          - adapters/**
+
+infrastructure:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+          - Cargo.toml
+          - crates/*/Cargo.toml
+          - rust-toolchain.toml
