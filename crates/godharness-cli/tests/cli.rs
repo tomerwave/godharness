@@ -55,7 +55,14 @@ fn context_prints_the_must_read_standards_as_json() {
         .map(|entry| entry["id"].as_str().expect("id should be a string"))
         .collect();
 
-    assert_eq!(ids, vec!["no-comments", "secrets-and-security"]);
+    assert_eq!(
+        ids,
+        vec![
+            "secrets-and-security",
+            "simplify-before-done",
+            "verify-through-real-path",
+        ]
+    );
 }
 
 #[test]

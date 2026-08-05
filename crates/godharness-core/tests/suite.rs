@@ -1,6 +1,6 @@
 use godharness_core::{build_graph, recommended_v1};
 
-const RECOMMENDED_V1_STANDARD_COUNT: usize = 9;
+const RECOMMENDED_V1_STANDARD_COUNT: usize = 13;
 
 #[test]
 fn every_embedded_document_parses() {
@@ -32,7 +32,7 @@ fn embedded_documents_form_a_valid_graph() {
 }
 
 #[test]
-fn must_read_standards_are_no_comments_and_secrets() {
+fn must_read_standards_are_secrets_simplify_and_verify() {
     let standards = recommended_v1().expect("every embedded document should parse");
 
     let must_read: Vec<&str> = standards
@@ -41,5 +41,12 @@ fn must_read_standards_are_no_comments_and_secrets() {
         .map(|standard| standard.id.as_str())
         .collect();
 
-    assert_eq!(must_read, vec!["no-comments", "secrets-and-security"]);
+    assert_eq!(
+        must_read,
+        vec![
+            "secrets-and-security",
+            "simplify-before-done",
+            "verify-through-real-path",
+        ]
+    );
 }
