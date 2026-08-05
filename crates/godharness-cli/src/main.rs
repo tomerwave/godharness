@@ -46,8 +46,28 @@ fn current_dir() -> PathBuf {
 }
 
 fn run_init() -> ExitCode {
-    println!("godharness init: not yet implemented");
-    ExitCode::SUCCESS
+    match godharness_core::run_init(&current_dir()) {
+        Ok(report) => {
+            println!(
+                "godharness init: godharness.yaml {}, docs/godharness/example.md {}",
+                if report.config_created {
+                    "created"
+                } else {
+                    "already exists"
+                },
+                if report.starter_standard_created {
+                    "created"
+                } else {
+                    "already exists"
+                },
+            );
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            eprintln!("godharness init: {error}");
+            ExitCode::FAILURE
+        }
+    }
 }
 
 fn run_check() -> ExitCode {
@@ -81,8 +101,24 @@ fn run_context(prompt: Option<String>, paths: Vec<String>) -> ExitCode {
 }
 
 fn run_doctor() -> ExitCode {
-    println!("godharness doctor: not yet implemented");
-    ExitCode::SUCCESS
+    match godharness_core::run_doctor(&current_dir()) {
+        Ok(report) => {
+            println!(
+                "godharness doctor: {} standards, adapters enabled: {}",
+                report.standard_count,
+                if report.enabled_adapters.is_empty() {
+                    "none".to_string()
+                } else {
+                    report.enabled_adapters.join(", ")
+                }
+            );
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            eprintln!("godharness doctor: {error}");
+            ExitCode::FAILURE
+        }
+    }
 }
 
 fn main() -> ExitCode {
