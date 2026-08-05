@@ -16,5 +16,8 @@ workspace = true
 [dependencies]
 serde = { workspace = true }
 serde_yaml = { workspace = true }
+regex = { workspace = true }
+glob = { workspace = true }
+gray_matter = { workspace = true }
 
 [dev-dependencies]
