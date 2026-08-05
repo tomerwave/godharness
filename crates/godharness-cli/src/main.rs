@@ -13,22 +13,28 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Scaffold godharness.yaml and starter standards. Human-facing, run once per repository.
+    #[command(
+        about = "Scaffold godharness.yaml and starter standards. Human-facing, run once per repository."
+    )]
     Init,
-    /// Validate document schema, links, classification, selectors, and adapter configuration.
-    /// Human- and CI-facing.
+    #[command(
+        about = "Validate document schema, links, classification, selectors, and adapter configuration. Human- and CI-facing."
+    )]
     Check,
-    /// Resolve the standards relevant to a prompt or a set of changed paths, as JSON on stdout.
-    /// Adapter-facing: agent integrations call this, humans do not run it directly.
+    #[command(
+        about = "Resolve the standards relevant to a prompt or a set of changed paths, as JSON on stdout. Adapter-facing: agent integrations call this, humans do not run it directly."
+    )]
     Context {
-        /// The prompt text to match against standard keywords.
-        #[arg(long)]
+        #[arg(long, help = "The prompt text to match against standard keywords.")]
         prompt: Option<String>,
-        /// One or more changed-file paths to match against standard path globs.
-        #[arg(long = "paths", num_args = 1..)]
+        #[arg(
+            long = "paths",
+            num_args = 1..,
+            help = "One or more changed-file paths to match against standard path globs."
+        )]
         paths: Vec<String>,
     },
-    /// Validate the local installation and adapter wiring. Human- and CI-facing.
+    #[command(about = "Validate the local installation and adapter wiring. Human- and CI-facing.")]
     Doctor,
 }
 

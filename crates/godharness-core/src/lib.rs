@@ -3,7 +3,6 @@ use std::fmt;
 
 use serde::Deserialize;
 
-/// The parsed shape of a repository's `godharness.yaml`.
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct Config {
     pub version: u32,
@@ -15,7 +14,6 @@ pub struct Config {
     pub adapters: BTreeMap<String, bool>,
 }
 
-/// An error parsing a `godharness.yaml` document.
 #[derive(Debug)]
 pub struct ConfigError(String);
 
@@ -27,25 +25,15 @@ impl fmt::Display for ConfigError {
 
 impl std::error::Error for ConfigError {}
 
-/// Parse a `godharness.yaml` document from its raw text.
 pub fn parse_config(yaml: &str) -> Result<Config, ConfigError> {
     serde_yaml::from_str(yaml).map_err(|error| ConfigError(error.to_string()))
 }
 
-/// The standards resolved as relevant to a prompt or a set of changed paths.
-///
-/// This is a stub: no selector, precedence, or conflict logic exists yet. It
-/// establishes the shape `godharness-cli context` returns so adapters and
-/// later resolver work depend on a stable contract from the start.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ResolvedContext {
     pub standards: Vec<String>,
 }
 
-/// Resolve the standards relevant to a prompt and/or a set of changed paths.
-///
-/// Always returns an empty result today; the selector and precedence rules
-/// are an open product decision (see the repository bootstrap design doc).
 pub fn resolve(_config: &Config, _prompt: Option<&str>, _paths: &[String]) -> ResolvedContext {
     ResolvedContext::default()
 }
