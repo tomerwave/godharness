@@ -24,11 +24,17 @@ short of that: adapters get placeholder directories and stated contracts, not lo
 - Godlint wired into CI as the published GitHub Action (`tomerwave/godlint@v1`),
   not built from source — godharness is a consumer of Godlint, not a fork of its
   build.
-- CI adopts godlint's "core bar" (test/lint/format/docs/dogfood) plus branch-name
-  enforcement, but not coverage/mutation/real-world-corpus workflows or the
-  mechanical PR-invariant script — those assume a mature rule/resolver engine and
-  established conventions (e.g. a CHANGELOG-per-source-change rule) that don't
-  exist yet.
+- CI adopts godlint's "core bar" (test/lint/format/docs/dogfood), but not
+  coverage/mutation/real-world-corpus workflows or the mechanical PR-invariant
+  script — those assume a mature rule/resolver engine and established
+  conventions (e.g. a CHANGELOG-per-source-change rule) that don't exist yet.
+- Branch-name enforcement is deliberately **not** added to this bootstrap. It was
+  proposed as a godlint rule instead of a duplicated script, since godlint is the
+  shared enforcement layer both repos already depend on — see
+  [tomerwave/godlint#282](https://github.com/tomerwave/godlint/issues/282). Until
+  that proposal resolves (accepted as a rule, or rejected in favor of some other
+  shared mechanism), godharness has no branch-name check at all rather than a
+  script it intends to delete later.
 - The CLI keeps the four commands from the README (`init`, `check`, `context`,
   `doctor`), reframed by audience: `context` is the adapter-facing hot-path JSON
   contract (not typed by hand); `check`/`doctor`/`init` are human/CI-facing.
@@ -62,8 +68,6 @@ godharness/
 ├── docs/
 │   ├── README.md                    doc index (near-empty; schema is an open decision)
 │   └── local-development.md         build instructions + "checks CI runs"
-├── scripts/
-│   └── check-branch-name.sh
 └── .github/
     ├── workflows/
     │   ├── test.yml
@@ -71,8 +75,7 @@ godharness/
     │   ├── format.yml
     │   ├── docs.yml
     │   ├── godlint.yml
-    │   ├── labeler.yml
-    │   └── pull-request.yml         branch-name job only
+    │   └── labeler.yml
     ├── labeler.yml
     ├── PULL_REQUEST_TEMPLATE/
     │   ├── standard-proposal.md
@@ -134,7 +137,6 @@ minimal` where a toolchain is needed.
 | `docs.yml` | `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps` |
 | `godlint.yml` | `uses: tomerwave/godlint@v1` against the repo root |
 | `labeler.yml` | `actions/labeler@v5`, `sync-labels: false`, on `pull_request_target` |
-| `pull-request.yml` | branch-name job only: `scripts/check-branch-name.sh` against `$BRANCH` |
 
 `.github/labeler.yml` path rules:
 - `documentation` → `docs/**`, `*.md`
@@ -147,12 +149,8 @@ minimal` where a toolchain is needed.
 mutation-testing workflow, real-world-corpus workflow, mechanical PR-invariant
 script (`validate-pull-request.py` equivalent), CHANGELOG-entry-per-source-change
 enforcement. Each assumes conventions (a rule/resolver engine to measure, an
-established changelog discipline) that don't exist yet in this repo.
-
-`scripts/check-branch-name.sh` enforces the same convention as godlint: a
-Conventional Commits type (`feat`, `fix`, `perf`, `docs`, `style`, `refactor`,
-`test`, `build`, `ci`, `chore`, `revert`, `release`), a slash, and a lower-case
-slug, e.g. `feat/context-json-contract`.
+established changelog discipline) that don't exist yet in this repo. Branch-name
+enforcement is also deliberately absent — see the follow-up section.
 
 ## Community health files
 
@@ -167,8 +165,10 @@ slug, e.g. `feat/context-json-contract`.
 - **CONTRIBUTING.md** — godharness-specific design principles (deterministic
   resolution, local-first, Markdown/Git-native, explainability, versioned suite
   stability, "don't invent engineering standards — godharness ships a
-  resolver/schema, not opinions"), the branch-naming convention, and PR template
-  selection (`?template=standard-proposal.md` / `?template=infrastructure.md`).
+  resolver/schema, not opinions"), and PR template selection
+  (`?template=standard-proposal.md` / `?template=infrastructure.md`). Documents
+  the same Conventional-Commits branch-naming convention as godlint (`type/slug`)
+  as guidance, but notes it is not yet CI-enforced — see the follow-up section.
   No `fixes-false-positive`/`relaxes-a-rule` labels — that concept is specific to
   godlint's release-drift dogfooding and doesn't apply here.
 - **PR templates**:
@@ -222,7 +222,12 @@ find-and-replace of godlint's text.
 
 ## Follow-up
 
-A separate brainstorming/design pass will study Viewstone's `.harness/`,
-`.claude/hooks/`, `.codex/hooks.json`, and `.pi/extensions/` implementation to
-derive godharness's adapter architecture and a concrete roadmap, informing what
-`adapters/*/README.md` currently only states as a contract.
+- A separate brainstorming/design pass will study Viewstone's `.harness/`,
+  `.claude/hooks/`, `.codex/hooks.json`, and `.pi/extensions/` implementation to
+  derive godharness's adapter architecture and a concrete roadmap, informing what
+  `adapters/*/README.md` currently only states as a contract.
+- [tomerwave/godlint#282](https://github.com/tomerwave/godlint/issues/282) proposes
+  branch-name enforcement as a godlint rule (a new git/CI-metadata fact class)
+  rather than a script godharness would otherwise duplicate. If it's accepted,
+  godharness gets the check for free via `recommended@1`; if it's rejected, revisit
+  a shared-script/reusable-workflow approach instead.
