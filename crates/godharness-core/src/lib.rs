@@ -3,6 +3,10 @@ use std::fmt;
 
 use serde::Deserialize;
 
+pub mod standard;
+
+pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
+
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct Config {
     pub version: u32,
