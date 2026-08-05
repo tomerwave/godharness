@@ -1,4 +1,4 @@
-use godharness_core::{ResolvedContext, parse_config, resolve};
+use godharness_core::parse_config;
 
 #[test]
 fn parses_minimal_config() {
@@ -46,17 +46,4 @@ fn rejects_config_missing_version() {
     let result = parse_config(yaml);
 
     assert!(result.is_err());
-}
-
-#[test]
-fn resolve_returns_empty_result_for_now() {
-    let config = parse_config("version: 1\n").expect("valid config should parse");
-
-    let resolved = resolve(
-        &config,
-        Some("add a new endpoint"),
-        &["src/main.rs".to_string()],
-    );
-
-    assert_eq!(resolved, ResolvedContext::default());
 }

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::graph::{GraphError, build_graph};
+use crate::graph::{GraphError, StandardGraph, build_graph};
 use crate::standard::{Standard, StandardError, parse_standard};
 use crate::suite::recommended_v1;
 use crate::{Config, ConfigError, parse_config};
@@ -117,11 +117,15 @@ fn load_repository_standards(root: &Path, config: &Config) -> Result<Vec<Standar
     Ok(standards)
 }
 
-pub fn run_check(root: &Path) -> Result<CheckReport, CheckError> {
+pub fn load_repository_graph(root: &Path) -> Result<StandardGraph, CheckError> {
     let config = load_config(root)?;
     let mut standards = load_suite_standards(&config)?;
     standards.extend(load_repository_standards(root, &config)?);
-    let graph = build_graph(standards)?;
+    Ok(build_graph(standards)?)
+}
+
+pub fn run_check(root: &Path) -> Result<CheckReport, CheckError> {
+    let graph = load_repository_graph(root)?;
     Ok(CheckReport {
         standard_count: graph.len(),
     })

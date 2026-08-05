@@ -5,11 +5,13 @@ use serde::Deserialize;
 
 pub mod check;
 pub mod graph;
+pub mod resolve;
 pub mod standard;
 pub mod suite;
 
-pub use check::{CheckError, CheckReport, run_check};
+pub use check::{CheckError, CheckReport, load_repository_graph, run_check};
 pub use graph::{EdgeKind, GraphError, StandardGraph, build_graph, content_hash};
+pub use resolve::{ResolvedStandard, resolve};
 pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
 pub use suite::recommended_v1;
 
@@ -37,13 +39,4 @@ impl std::error::Error for ConfigError {}
 
 pub fn parse_config(yaml: &str) -> Result<Config, ConfigError> {
     serde_yaml::from_str(yaml).map_err(|error| ConfigError(error.to_string()))
-}
-
-#[derive(Debug, Default, Clone, PartialEq)]
-pub struct ResolvedContext {
-    pub standards: Vec<String>,
-}
-
-pub fn resolve(_config: &Config, _prompt: Option<&str>, _paths: &[String]) -> ResolvedContext {
-    ResolvedContext::default()
 }

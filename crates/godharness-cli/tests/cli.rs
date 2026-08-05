@@ -35,7 +35,7 @@ fn doctor_exits_successfully() {
 }
 
 #[test]
-fn context_prints_a_json_array_on_stdout() {
+fn context_prints_the_must_read_standards_as_json() {
     let output = godharness()
         .arg("context")
         .arg("--prompt")
@@ -49,11 +49,13 @@ fn context_prints_a_json_array_on_stdout() {
     let parsed: serde_json::Value =
         serde_json::from_str(stdout.trim()).expect("stdout should be valid JSON");
 
-    assert!(parsed.is_array());
-    assert_eq!(
-        parsed.as_array().expect("value should be an array").len(),
-        0
-    );
+    let entries = parsed.as_array().expect("value should be an array");
+    let ids: Vec<&str> = entries
+        .iter()
+        .map(|entry| entry["id"].as_str().expect("id should be a string"))
+        .collect();
+
+    assert_eq!(ids, vec!["no-comments", "secrets-and-security"]);
 }
 
 #[test]
