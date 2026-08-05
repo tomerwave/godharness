@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/godharness-icon.svg" width="168" alt="Godharness logo">
+</p>
+
 # Godharness: Temporary Product Brief
 
 Status: Working notes — not a Viewstone product document
