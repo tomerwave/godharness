@@ -1,0 +1,46 @@
+name: Technical debt
+description: Record a known shortcut, workaround, or stub that should be repaid.
+title: "debt: "
+labels: [tech-debt]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Debt is only debt if someone can find it later. A stub command, a placeholder
+        adapter, or a CI job deferred at bootstrap time should point at an issue filed with
+        this template.
+  - type: textarea
+    id: shortcut
+    attributes:
+      label: What was done instead of the right thing
+      description: >-
+        Describe the shortcut concretely. Link the stub function, the placeholder
+        adapter README, or the deferred workflow.
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Why it was the right call at the time
+      description: >-
+        Debt taken deliberately is a decision, not a mistake. State the constraint that made
+        the shortcut preferable, so a future reader can tell whether it still holds.
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: What it costs while it stands
+      description: >-
+        Who is slowed down, what is harder to change, or what is not being checked? Debt with
+        no stated cost cannot be prioritized against anything.
+    validations:
+      required: true
+  - type: textarea
+    id: repayment
+    attributes:
+      label: What repaying it looks like
+      description: >-
+        The concrete change that closes this issue, and how you would know it worked.
+    validations:
+      required: true

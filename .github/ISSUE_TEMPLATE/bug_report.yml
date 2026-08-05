@@ -1,0 +1,35 @@
+name: Bug report
+description: Report an unexpected behavior or documentation problem.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem. Do not include secrets or proprietary source code.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the observed and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include sanitized configuration, commands, and output.
+      placeholder: |
+        godharness.yaml:
+        Command:
+        Observed output:
+        Expected output:
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, Godharness version, and the agent tool involved, if any.
+    validations:
+      required: true

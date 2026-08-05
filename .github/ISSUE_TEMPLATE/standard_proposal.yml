@@ -1,0 +1,50 @@
+name: Standard proposal
+description: Propose a change to the default suite or the standard/config schema.
+title: "standard: "
+labels: [standard-proposal]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefer standards broadly useful across repositories. Do not include proprietary
+        code or repository-specific policy — that belongs in a repository's own
+        docs/, not in `recommended@1`.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What decision should the default suite make?
+      description: >-
+        The engineering decision this standard should encode, and who it's for.
+    validations:
+      required: true
+  - type: textarea
+    id: universality
+    attributes:
+      label: Why this belongs in `recommended@1`
+      description: >-
+        Why is this broadly useful rather than repository-specific? A standard earns its
+        place in the default suite by being a decision most repositories would make the
+        same way, not by being a good idea for one repository.
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: What this touches
+      options:
+        - New standard document in an existing suite
+        - New suite
+        - Selector/frontmatter schema change
+        - Resolver precedence or conflict-handling behavior
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility
+      description: >-
+        Would an existing `godharness.yaml` or standard document change meaning because of
+        this? Say so plainly, including "no". A versioned suite (`recommended@1`) must stay
+        stable when this ships as `recommended@2` or later, not silently change underfoot.
+    validations:
+      required: true

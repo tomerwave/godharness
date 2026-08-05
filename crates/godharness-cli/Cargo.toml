@@ -1,0 +1,26 @@
+[package]
+name = "godharness-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "The godharness command-line interface."
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "godharness"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+serde_json = { workspace = true }
+godharness-core = { path = "../godharness-core", version = "0.1.0" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
