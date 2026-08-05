@@ -68,7 +68,7 @@ fn default_config() -> Config {
     }
 }
 
-fn load_config(root: &Path) -> Result<Config, CheckError> {
+pub fn load_config(root: &Path) -> Result<Config, CheckError> {
     let config_path = root.join("godharness.yaml");
     if !config_path.exists() {
         return Ok(default_config());
