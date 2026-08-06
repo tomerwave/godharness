@@ -32,6 +32,12 @@ impl From<std::io::Error> for AdapterError {
     }
 }
 
+impl From<serde_yaml::Error> for AdapterError {
+    fn from(error: serde_yaml::Error) -> Self {
+        AdapterError(error.to_string())
+    }
+}
+
 fn scope_for(standard: &Standard, mapping: &FieldMapping) -> Option<Vec<String>> {
     if standard.must_read {
         Some(vec![mapping.always_scope.to_string()])
@@ -42,16 +48,16 @@ fn scope_for(standard: &Standard, mapping: &FieldMapping) -> Option<Vec<String>>
     }
 }
 
-fn render_frontmatter(standard: &Standard, scope: &[String], mapping: &FieldMapping) -> String {
-    let scope_list = scope
-        .iter()
-        .map(|entry| format!("\"{entry}\""))
-        .collect::<Vec<_>>()
-        .join(", ");
-    format!(
-        "---\ntitle: {}\n{}: [{}]\n---\n",
-        standard.title, mapping.scope_key, scope_list
-    )
+fn render_frontmatter(
+    standard: &Standard,
+    scope: &[String],
+    mapping: &FieldMapping,
+) -> Result<String, AdapterError> {
+    let mut frontmatter = serde_yaml::Mapping::new();
+    frontmatter.insert("title".into(), standard.title.clone().into());
+    frontmatter.insert(mapping.scope_key.into(), scope.to_vec().into());
+    let yaml = serde_yaml::to_string(&frontmatter)?;
+    Ok(format!("---\n{yaml}---\n"))
 }
 
 fn render_body(standard: &Standard) -> String {
@@ -65,20 +71,28 @@ fn render_body(standard: &Standard) -> String {
     body
 }
 
-fn render_one(standard: &Standard, mapping: &FieldMapping) -> Option<RenderedFile> {
-    let scope = scope_for(standard, mapping)?;
-    let frontmatter = render_frontmatter(standard, &scope, mapping);
+fn render_one(
+    standard: &Standard,
+    mapping: &FieldMapping,
+) -> Result<Option<RenderedFile>, AdapterError> {
+    let Some(scope) = scope_for(standard, mapping) else {
+        return Ok(None);
+    };
+    let frontmatter = render_frontmatter(standard, &scope, mapping)?;
     let body = render_body(standard);
-    Some(RenderedFile {
+    Ok(Some(RenderedFile {
         path: Path::new(mapping.directory).join(format!("{}.{}", standard.id, mapping.extension)),
         content: format!("{frontmatter}\n{body}"),
-    })
+    }))
 }
 
-pub fn render_shape_a(standards: &[Standard], mapping: &FieldMapping) -> Vec<RenderedFile> {
+pub fn render_shape_a(
+    standards: &[Standard],
+    mapping: &FieldMapping,
+) -> Result<Vec<RenderedFile>, AdapterError> {
     standards
         .iter()
-        .filter_map(|standard| render_one(standard, mapping))
+        .filter_map(|standard| render_one(standard, mapping).transpose())
         .collect()
 }
 
