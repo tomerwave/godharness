@@ -65,6 +65,7 @@ fn default_config() -> Config {
         suites: vec!["recommended@1".to_string()],
         standards: vec![DEFAULT_STANDARDS_GLOB.to_string()],
         adapters: Default::default(),
+        reinject_after_prompts: 0,
     }
 }
 

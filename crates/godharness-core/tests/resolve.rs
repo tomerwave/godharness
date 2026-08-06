@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use godharness_core::{Standard, build_graph, resolve};
+use godharness_core::{Standard, build_graph, resolve, resolve_by_keyword_only};
 
 fn standard(id: &str, keywords: &[&str], paths: &[&str], must_read: bool) -> Standard {
     Standard {
@@ -91,6 +91,37 @@ fn superseded_standards_are_excluded() {
         resolved.iter().map(|r| r.id.as_str()).collect::<Vec<_>>(),
         vec!["new"]
     );
+}
+
+#[test]
+fn keyword_only_matches_a_must_read_standard_when_its_keyword_matches() {
+    let graph = build_graph(vec![standard("secrets", &["credential"], &[], true)])
+        .expect("graph should build");
+
+    let resolved = resolve_by_keyword_only(&graph, "add a credential");
+
+    assert_eq!(resolved.len(), 1);
+    assert_eq!(resolved[0].id, "secrets");
+}
+
+#[test]
+fn keyword_only_ignores_a_must_read_standard_with_no_keyword_match() {
+    let graph = build_graph(vec![standard("secrets", &["credential"], &[], true)])
+        .expect("graph should build");
+
+    let resolved = resolve_by_keyword_only(&graph, "unrelated wording");
+
+    assert!(resolved.is_empty());
+}
+
+#[test]
+fn keyword_only_ignores_path_matches() {
+    let graph = build_graph(vec![standard("rust-only", &[], &["**/*.rs"], false)])
+        .expect("graph should build");
+
+    let resolved = resolve_by_keyword_only(&graph, "src/lib.rs");
+
+    assert!(resolved.is_empty());
 }
 
 #[test]

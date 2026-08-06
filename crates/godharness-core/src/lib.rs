@@ -3,6 +3,7 @@ use std::fmt;
 
 use serde::Deserialize;
 
+pub mod adapters;
 pub mod check;
 pub mod doctor;
 pub mod graph;
@@ -11,11 +12,15 @@ pub mod resolve;
 pub mod standard;
 pub mod suite;
 
-pub use check::{CheckError, CheckReport, load_repository_graph, run_check};
+pub use adapters::{
+    AdapterError, ClaudeCodeEvent, FieldMapping, HookRequest, RenderedFile, SessionState,
+    claude_code_hook_response, render_shape_a, write_rendered_files,
+};
+pub use check::{CheckError, CheckReport, load_config, load_repository_graph, run_check};
 pub use doctor::{DoctorReport, run_doctor};
 pub use graph::{EdgeKind, GraphError, StandardGraph, build_graph, content_hash};
 pub use init::{InitError, InitReport, run_init};
-pub use resolve::{ResolvedStandard, resolve};
+pub use resolve::{ResolvedStandard, resolve, resolve_by_keyword_only};
 pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
 pub use suite::recommended_v1;
 
@@ -28,6 +33,8 @@ pub struct Config {
     pub standards: Vec<String>,
     #[serde(default)]
     pub adapters: BTreeMap<String, bool>,
+    #[serde(default, rename = "reinject-after-prompts")]
+    pub reinject_after_prompts: u32,
 }
 
 #[derive(Debug)]

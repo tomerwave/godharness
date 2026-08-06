@@ -47,3 +47,12 @@ pub fn resolve(
         .map(|standard| to_resolved(graph, standard))
         .collect()
 }
+
+pub fn resolve_by_keyword_only(graph: &StandardGraph, prompt: &str) -> Vec<ResolvedStandard> {
+    graph
+        .standards()
+        .filter(|standard| !graph.is_superseded(&standard.id))
+        .filter(|standard| keyword_matches(prompt, &standard.keywords))
+        .map(|standard| to_resolved(graph, standard))
+        .collect()
+}
