@@ -3,6 +3,7 @@ use std::fmt;
 
 use serde::Deserialize;
 
+pub mod adapters;
 pub mod check;
 pub mod doctor;
 pub mod graph;
@@ -11,6 +12,10 @@ pub mod resolve;
 pub mod standard;
 pub mod suite;
 
+pub use adapters::{
+    AdapterError, ClaudeCodeEvent, FieldMapping, RenderedFile, claude_code_hook_response,
+    render_shape_a, write_rendered_files,
+};
 pub use check::{CheckError, CheckReport, load_repository_graph, run_check};
 pub use doctor::{DoctorReport, run_doctor};
 pub use graph::{EdgeKind, GraphError, StandardGraph, build_graph, content_hash};

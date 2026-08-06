@@ -1,7 +1,9 @@
+use std::io::Read;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
+use godharness_core::ClaudeCodeEvent;
 
 #[derive(Parser)]
 #[command(
@@ -39,6 +41,36 @@ enum Command {
     },
     #[command(about = "Validate the local installation and adapter wiring. Human- and CI-facing.")]
     Doctor,
+    #[command(
+        about = "Respond to a live agent-tool hook event on stdin/stdout. Adapter-facing: invoked by generated hook configuration, not run by hand.",
+        hide = true
+    )]
+    AdapterHook {
+        #[arg(value_enum)]
+        tool: AdapterTool,
+        #[arg(long, value_enum)]
+        event: AdapterHookEvent,
+    },
+}
+
+#[derive(Clone, ValueEnum)]
+enum AdapterTool {
+    ClaudeCode,
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+enum AdapterHookEvent {
+    UserPromptSubmit,
+    SessionStart,
+}
+
+impl From<AdapterHookEvent> for ClaudeCodeEvent {
+    fn from(event: AdapterHookEvent) -> Self {
+        match event {
+            AdapterHookEvent::UserPromptSubmit => ClaudeCodeEvent::UserPromptSubmit,
+            AdapterHookEvent::SessionStart => ClaudeCodeEvent::SessionStart,
+        }
+    }
 }
 
 fn current_dir() -> PathBuf {
@@ -121,6 +153,38 @@ fn run_doctor() -> ExitCode {
     }
 }
 
+fn prompt_from_stdin(input: &str) -> Option<String> {
+    let parsed: serde_json::Value = serde_json::from_str(input).ok()?;
+    parsed
+        .get("prompt")
+        .and_then(|prompt| prompt.as_str())
+        .map(str::to_string)
+}
+
+fn run_adapter_hook(tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
+    let AdapterTool::ClaudeCode = tool;
+
+    let mut input = String::new();
+    let _ = std::io::stdin().read_to_string(&mut input);
+
+    let prompt = match event {
+        AdapterHookEvent::UserPromptSubmit => prompt_from_stdin(&input),
+        AdapterHookEvent::SessionStart => None,
+    };
+
+    let Ok(graph) = godharness_core::load_repository_graph(&current_dir()) else {
+        return ExitCode::SUCCESS;
+    };
+
+    if let Some(response) =
+        godharness_core::claude_code_hook_response(&graph, event.into(), prompt.as_deref())
+    {
+        println!("{response}");
+    }
+
+    ExitCode::SUCCESS
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
@@ -129,5 +193,6 @@ fn main() -> ExitCode {
         Command::Check => run_check(),
         Command::Context { prompt, paths } => run_context(prompt, paths),
         Command::Doctor => run_doctor(),
+        Command::AdapterHook { tool, event } => run_adapter_hook(tool, event),
     }
 }
