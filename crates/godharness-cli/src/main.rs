@@ -56,6 +56,7 @@ enum Command {
 #[derive(Clone, ValueEnum)]
 enum AdapterTool {
     ClaudeCode,
+    Codex,
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -203,8 +204,7 @@ fn read_hook_inputs(event: AdapterHookEvent) -> HookInputs {
     }
 }
 
-fn run_adapter_hook(tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
-    let AdapterTool::ClaudeCode = tool;
+fn run_adapter_hook(_tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
     let inputs = read_hook_inputs(event);
 
     let root = current_dir();

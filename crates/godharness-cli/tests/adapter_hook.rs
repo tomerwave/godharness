@@ -6,11 +6,16 @@ fn godharness() -> Command {
 }
 
 #[allow(clippy::expect_used)]
-fn run_adapter_hook(event: &str, stdin_json: &str, cwd: Option<&std::path::Path>) -> String {
+fn run_adapter_hook_for(
+    tool: &str,
+    event: &str,
+    stdin_json: &str,
+    cwd: Option<&std::path::Path>,
+) -> String {
     let mut command = godharness();
     command
         .arg("adapter-hook")
-        .arg("claude-code")
+        .arg(tool)
         .arg("--event")
         .arg(event)
         .stdin(Stdio::piped())
@@ -31,6 +36,10 @@ fn run_adapter_hook(event: &str, stdin_json: &str, cwd: Option<&std::path::Path>
     let output = child.wait_with_output().expect("wait for adapter-hook");
     assert!(output.status.success());
     String::from_utf8(output.stdout).expect("stdout should be utf8")
+}
+
+fn run_adapter_hook(event: &str, stdin_json: &str, cwd: Option<&std::path::Path>) -> String {
+    run_adapter_hook_for("claude-code", event, stdin_json, cwd)
 }
 
 struct SessionState {
@@ -96,6 +105,47 @@ fn session_start_prints_must_read_standards_as_real_hook_json() {
     let stdin_json = format!(r#"{{"session_id":"{}"}}"#, session.session_id);
 
     let stdout = run_adapter_hook("session-start", &stdin_json, None);
+
+    let parsed: serde_json::Value =
+        serde_json::from_str(stdout.trim()).expect("stdout should be valid JSON");
+    assert_eq!(
+        parsed["hookSpecificOutput"]["hookEventName"],
+        "SessionStart"
+    );
+    let context = parsed["hookSpecificOutput"]["additionalContext"]
+        .as_str()
+        .expect("additionalContext should be a string");
+    assert!(context.contains("secrets-and-security"));
+}
+
+#[test]
+fn codex_user_prompt_submit_prints_matching_standards_as_real_hook_json() {
+    let session = SessionState::new("codex-prompt-match");
+    let stdin_json = format!(
+        r#"{{"prompt":"add a credential to config","session_id":"{}"}}"#,
+        session.session_id
+    );
+
+    let stdout = run_adapter_hook_for("codex", "user-prompt-submit", &stdin_json, None);
+
+    let parsed: serde_json::Value =
+        serde_json::from_str(stdout.trim()).expect("stdout should be valid JSON");
+    assert_eq!(
+        parsed["hookSpecificOutput"]["hookEventName"],
+        "UserPromptSubmit"
+    );
+    let context = parsed["hookSpecificOutput"]["additionalContext"]
+        .as_str()
+        .expect("additionalContext should be a string");
+    assert!(context.contains("secrets-and-security"));
+}
+
+#[test]
+fn codex_session_start_prints_must_read_standards_as_real_hook_json() {
+    let session = SessionState::new("codex-session-start");
+    let stdin_json = format!(r#"{{"session_id":"{}"}}"#, session.session_id);
+
+    let stdout = run_adapter_hook_for("codex", "session-start", &stdin_json, None);
 
     let parsed: serde_json::Value =
         serde_json::from_str(stdout.trim()).expect("stdout should be valid JSON");
