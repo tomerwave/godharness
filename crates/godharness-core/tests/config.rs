@@ -10,6 +10,16 @@ fn parses_minimal_config() {
     assert_eq!(config.suites, vec!["recommended@1".to_string()]);
     assert!(config.standards.is_empty());
     assert!(config.adapters.is_empty());
+    assert_eq!(config.reinject_after_prompts, 0);
+}
+
+#[test]
+fn parses_reinject_after_prompts() {
+    let yaml = "version: 1\nreinject-after-prompts: 5\n";
+
+    let config = parse_config(yaml).expect("valid config should parse");
+
+    assert_eq!(config.reinject_after_prompts, 5);
 }
 
 #[test]

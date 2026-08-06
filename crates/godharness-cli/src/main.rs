@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use godharness_core::ClaudeCodeEvent;
+use godharness_core::{ClaudeCodeEvent, SessionState};
 
 #[derive(Parser)]
 #[command(
@@ -153,32 +153,84 @@ fn run_doctor() -> ExitCode {
     }
 }
 
-fn prompt_from_stdin(input: &str) -> Option<String> {
+fn stdin_field(input: &str, field: &str) -> Option<String> {
     let parsed: serde_json::Value = serde_json::from_str(input).ok()?;
     parsed
-        .get("prompt")
-        .and_then(|prompt| prompt.as_str())
+        .get(field)
+        .and_then(|value| value.as_str())
         .map(str::to_string)
+}
+
+fn session_state_path(session_id: &str) -> PathBuf {
+    std::env::temp_dir()
+        .join("godharness")
+        .join("sessions")
+        .join(format!("{session_id}.json"))
+}
+
+fn load_session_state(session_id: &str) -> SessionState {
+    std::fs::read_to_string(session_state_path(session_id))
+        .ok()
+        .and_then(|contents| serde_json::from_str(&contents).ok())
+        .unwrap_or_default()
+}
+
+fn save_session_state(session_id: &str, state: &SessionState) {
+    let path = session_state_path(session_id);
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if let Ok(contents) = serde_json::to_string(state) {
+        let _ = std::fs::write(path, contents);
+    }
+}
+
+struct HookInputs {
+    prompt: Option<String>,
+    session_id: Option<String>,
+}
+
+fn read_hook_inputs(event: AdapterHookEvent) -> HookInputs {
+    let mut input = String::new();
+    let _ = std::io::stdin().read_to_string(&mut input);
+    let prompt = match event {
+        AdapterHookEvent::UserPromptSubmit => stdin_field(&input, "prompt"),
+        AdapterHookEvent::SessionStart => None,
+    };
+    HookInputs {
+        prompt,
+        session_id: stdin_field(&input, "session_id"),
+    }
 }
 
 fn run_adapter_hook(tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
     let AdapterTool::ClaudeCode = tool;
+    let inputs = read_hook_inputs(event);
 
-    let mut input = String::new();
-    let _ = std::io::stdin().read_to_string(&mut input);
-
-    let prompt = match event {
-        AdapterHookEvent::UserPromptSubmit => prompt_from_stdin(&input),
-        AdapterHookEvent::SessionStart => None,
-    };
-
-    let Ok(graph) = godharness_core::load_repository_graph(&current_dir()) else {
+    let root = current_dir();
+    let Ok(graph) = godharness_core::load_repository_graph(&root) else {
         return ExitCode::SUCCESS;
     };
+    let reinject_after_prompts = godharness_core::load_config(&root)
+        .map(|config| config.reinject_after_prompts)
+        .unwrap_or(0);
+    let mut state = inputs
+        .session_id
+        .as_deref()
+        .map(load_session_state)
+        .unwrap_or_default();
 
-    if let Some(response) =
-        godharness_core::claude_code_hook_response(&graph, event.into(), prompt.as_deref())
-    {
+    let request = godharness_core::HookRequest {
+        event: event.into(),
+        prompt: inputs.prompt.as_deref(),
+        reinject_after_prompts,
+    };
+    let response = godharness_core::claude_code_hook_response(&graph, request, &mut state);
+
+    if let Some(session_id) = inputs.session_id.as_deref() {
+        save_session_state(session_id, &state);
+    }
+    if let Some(response) = response {
         println!("{response}");
     }
 
