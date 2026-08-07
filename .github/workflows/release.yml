@@ -162,6 +162,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          registry-url: https://registry.npmjs.org
 
       - run: npm install --global npm@latest
 
@@ -176,12 +177,16 @@ jobs:
         run: python3 packaging/build-npm.py "${TAG#v}" --binaries binaries --out packages
 
       - name: Check every package packs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           while read -r package; do
             npm publish "$package" --access public --dry-run
           done < packages/publish-order
 
       - name: Publish in dependency order
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           while read -r package; do
             npm publish "$package" --access public --provenance
