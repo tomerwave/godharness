@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if git diff --quiet; then
+if [ -z "$(git status --porcelain)" ]; then
   echo "already current"
   exit 0
 fi

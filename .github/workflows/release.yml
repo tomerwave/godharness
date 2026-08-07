@@ -331,7 +331,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          git -C tap diff --quiet -- Formula/godharness.rb && { echo "Homebrew formula already names ${TAG#v}"; exit 0; }
+          [ -z "$(git -C tap status --porcelain -- Formula/godharness.rb)" ] && { echo "Homebrew formula already names ${TAG#v}"; exit 0; }
           git -C tap config user.name "github-actions[bot]"
           git -C tap config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C tap add Formula/godharness.rb
