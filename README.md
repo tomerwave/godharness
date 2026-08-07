@@ -123,6 +123,17 @@ godharness doctor
   of changed paths in a deterministic machine-readable form.
 - `doctor` validates local installation and adapter wiring.
 
+### Installing
+
+- **Homebrew:** `brew install tomerwave/tap/godharness`
+- **cargo:** `cargo install godharness-cli`
+- **npm:** `npm install --global @godharness/cli`
+- **pip:** `pip install godharness`
+
+This repository keeps its own installed copy current automatically:
+`.github/workflows/self-update.yml` runs `godharness update` whenever a new
+version releases and commits any resulting change directly to `main`.
+
 ## Technical Direction
 
 Build the core in Rust.
