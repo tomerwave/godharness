@@ -11,6 +11,7 @@ pub mod init;
 pub mod resolve;
 pub mod standard;
 pub mod suite;
+pub mod update;
 
 pub use adapters::{
     AdapterError, ClaudeCodeEvent, FieldMapping, HookRequest, InstallError, InstallReport,
@@ -24,6 +25,7 @@ pub use init::{InitError, InitReport, run_init};
 pub use resolve::{ResolvedStandard, resolve, resolve_by_keyword_only};
 pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
 pub use suite::recommended_v1;
+pub use update::{UpdateError, UpdateReport, update_repository};
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct Config {

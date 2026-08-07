@@ -242,12 +242,18 @@ floating major-version git tag for GitHub Action consumers. Every binary's `--ve
 and, for musl targets, static linking, are verified in CI before anything ships — that
 pattern carries over directly.
 
-**New, not something godlint has yet**: a Homebrew formula published to the existing
-`tomerwave/homebrew-tap` repository, built from the same release binaries. That tap currently
-holds one formula (`convert-to-md`, unrelated, GoReleaser-generated) — godharness's would be
-hand-written in the same style (`on_macos`/`on_linux` blocks, per-arch `url`/`sha256`), not
-GoReleaser output, since this is a Rust workspace built directly in CI rather than through
-GoReleaser's Go-oriented pipeline.
+**Built**: `.github/workflows/release.yml`, ported directly from godlint's actual pipeline —
+tag-consistency check, the seven-target binary matrix, and parallel crates.io/npm/PyPI
+publish jobs, an `announce` job for the GitHub release plus a floating major tag, and a
+terminal `homebrew` job publishing to the `tomerwave/homebrew-tap` repository (new; godlint
+doesn't have this yet either, but has an in-progress branch this was modeled on).
+
+**Also built, not something godlint needs**: `godharness update` and
+`.github/workflows/self-update.yml` close the loop for this repository specifically, since
+godharness (unlike godlint) doesn't check itself out from source in its own CI — the release
+workflow's `announce` job fires a `repository_dispatch` here, and the self-update workflow
+upgrades the installed binary, runs `godharness update` to resync suite pins and adapter
+config, and commits directly to `main` if anything changed.
 
 ## Testing strategy
 

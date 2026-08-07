@@ -1,0 +1,101 @@
+use std::path::Path;
+
+use crate::adapters::{InstallError, enable_adapter};
+use crate::check::{CheckError, load_config};
+
+const KNOWN_SUITES: &[&str] = &["recommended@1"];
+
+#[derive(Debug)]
+pub struct UpdateError(String);
+
+impl std::fmt::Display for UpdateError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{}", self.0)
+    }
+}
+
+impl std::error::Error for UpdateError {}
+
+impl From<CheckError> for UpdateError {
+    fn from(error: CheckError) -> Self {
+        UpdateError(error.to_string())
+    }
+}
+
+impl From<InstallError> for UpdateError {
+    fn from(error: InstallError) -> Self {
+        UpdateError(error.to_string())
+    }
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub struct UpdateReport {
+    pub suites_updated: Vec<String>,
+    pub adapters_resynced: Vec<String>,
+}
+
+fn suite_family(suite: &str) -> Option<&str> {
+    suite.rsplit_once('@').map(|(family, _)| family)
+}
+
+fn latest_known_version(family: &str) -> Option<&'static str> {
+    KNOWN_SUITES
+        .iter()
+        .filter(|known| suite_family(known) == Some(family))
+        .max()
+        .copied()
+}
+
+fn updated_suite(pinned: &str) -> Option<String> {
+    let family = suite_family(pinned)?;
+    let latest = latest_known_version(family)?;
+
+    if latest == pinned {
+        None
+    } else {
+        Some(latest.to_string())
+    }
+}
+
+fn enabled_adapter_names(root: &Path) -> Result<Vec<String>, UpdateError> {
+    let config = load_config(root)?;
+    let mut names: Vec<String> = config
+        .adapters
+        .iter()
+        .filter(|(_, enabled)| **enabled)
+        .map(|(name, _)| name.clone())
+        .collect();
+    names.sort_unstable();
+    Ok(names)
+}
+
+fn resync_adapters(root: &Path) -> Result<Vec<String>, UpdateError> {
+    let mut resynced = Vec::new();
+
+    for name in enabled_adapter_names(root)? {
+        enable_adapter(root, &name)?;
+        resynced.push(name);
+    }
+
+    Ok(resynced)
+}
+
+fn updated_suites(root: &Path) -> Result<Vec<String>, UpdateError> {
+    let config = load_config(root)?;
+    Ok(config
+        .suites
+        .iter()
+        .filter_map(|suite| updated_suite(suite))
+        .collect())
+}
+
+pub fn update_repository(root: &Path) -> Result<UpdateReport, UpdateError> {
+    if !root.join("godharness.yaml").exists() {
+        return Ok(UpdateReport::default());
+    }
+
+    Ok(UpdateReport {
+        suites_updated: updated_suites(root)?,
+        adapters_resynced: resync_adapters(root)?,
+    })
+}

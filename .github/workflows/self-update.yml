@@ -1,0 +1,25 @@
+name: Self Update
+
+on:
+  repository_dispatch:
+    types: [godharness-released]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    name: Sync this repository to the latest godharness
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the latest godharness
+        run: brew install tomerwave/tap/godharness || brew upgrade tomerwave/tap/godharness
+
+      - run: godharness update
+
+      - name: Commit if anything changed
+        run: scripts/commit-self-update.sh

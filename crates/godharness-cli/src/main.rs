@@ -56,6 +56,10 @@ enum Command {
         #[command(subcommand)]
         action: AdaptersCommand,
     },
+    #[command(
+        about = "Sync this repository's suite pins and adapter config to the installed godharness version. Human- and CI-facing."
+    )]
+    Update,
 }
 
 #[derive(Subcommand)]
@@ -290,6 +294,23 @@ fn run_adapters_enable(tool: AdapterTool) -> ExitCode {
     }
 }
 
+fn run_update() -> ExitCode {
+    match godharness_core::update_repository(&current_dir()) {
+        Ok(report) => {
+            println!(
+                "godharness update: {} suite(s) updated, {} adapter(s) resynced",
+                report.suites_updated.len(),
+                report.adapters_resynced.len(),
+            );
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            eprintln!("godharness update: {error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
@@ -302,5 +323,6 @@ fn main() -> ExitCode {
         Command::Adapters {
             action: AdaptersCommand::Enable { tool },
         } => run_adapters_enable(tool),
+        Command::Update => run_update(),
     }
 }
