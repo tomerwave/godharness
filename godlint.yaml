@@ -1,2 +1,13 @@
 version: 1
+
+# The release-packaging scripts, which are this repository's own product code —
+# packaging/npm/shim.js ships to npm users. Rules written for the Rust source meet code they
+# were not written for here: style/no-comments on Python and JavaScript that explains policy,
+# logging/no-production-log where a script's print is its interface, and
+# architecture/restricted-call on files whose job is to exit. Mirrors godlint's own
+# godlint.yaml exclusion for the same reason, on the same kind of files.
+exclude:
+  - scripts
+  - packaging
+
 suites: [recommended@1]
