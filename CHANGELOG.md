@@ -6,6 +6,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before `1.0`, a `0.x` release may
 change the CLI surface or configuration schema.
 
+## [0.1.1] - 2026-08-07
+
+### Fixed
+
+- The `homebrew` release job and the self-update commit script now detect a brand-new,
+  untracked file as a real change (`git diff --quiet` is blind to untracked files, which
+  silently no-op'd the very first Homebrew tap publish in 0.1.0).
+
+### Internal
+
+- npm publishing reverted from a bootstrap token back to OIDC trusted publishing, now that all
+  six packages exist and each has trusted publishing configured.
+
 ## [0.1.0] - 2026-08-07
 
 ### Added
