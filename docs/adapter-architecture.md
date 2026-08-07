@@ -227,11 +227,18 @@ that:
    [Distribution](#distribution)) — hook config references the bare command name, never an
    absolute path resolved at install time.
 
-Proposed CLI surface (naming, not final): `godharness adapters list`,
-`godharness adapters enable <name>`, `godharness adapters sync` (regenerate static output +
-verify hook config is still present after a manual edit), and an internal
-`godharness adapter-hook <tool> --event <event>` that the generated hook config itself
-invokes — not meant for a human to type.
+**Built**: `godharness adapters enable <claude-code|codex>` — scaffolds `godharness.yaml` if
+absent, records `adapters.<tool>: true`, and merges the `UserPromptSubmit`/`SessionStart` hook
+entries into `.claude/settings.json` or `.codex/hooks.json`, idempotent and non-destructive of
+unrelated existing config. Verified against this repository itself: running it for both tools,
+then a real `claude -p` and a real `codex exec` invocation in this repo, both surfaced the
+`secrets-and-security` standard's `additionalContext` correctly.
+
+Not yet built: `godharness adapters list` and `godharness adapters sync` (regenerate static
+output + verify hook config is still present after a manual edit) — proposed naming, not
+needed yet since only one installable enable target exists per tool today. The internal
+`godharness adapter-hook <tool> --event <event>` that the generated hook config invokes is not
+meant for a human to type.
 
 ## Distribution
 
