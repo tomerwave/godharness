@@ -42,6 +42,17 @@ fn run_adapter_hook(event: &str, stdin_json: &str, cwd: Option<&std::path::Path>
     run_adapter_hook_for("claude-code", event, stdin_json, cwd)
 }
 
+#[allow(clippy::expect_used)]
+fn assert_hook_response_contains(stdout: &str, event_name: &str, standard_id: &str) {
+    let parsed: serde_json::Value =
+        serde_json::from_str(stdout.trim()).expect("stdout should be valid JSON");
+    assert_eq!(parsed["hookSpecificOutput"]["hookEventName"], event_name);
+    let context = parsed["hookSpecificOutput"]["additionalContext"]
+        .as_str()
+        .expect("additionalContext should be a string");
+    assert!(context.contains(standard_id));
+}
+
 struct SessionState {
     session_id: String,
 }
@@ -74,16 +85,7 @@ fn user_prompt_submit_prints_matching_standards_as_real_hook_json() {
 
     let stdout = run_adapter_hook("user-prompt-submit", &stdin_json, None);
 
-    let parsed: serde_json::Value =
-        serde_json::from_str(stdout.trim()).expect("stdout should be valid JSON");
-    assert_eq!(
-        parsed["hookSpecificOutput"]["hookEventName"],
-        "UserPromptSubmit"
-    );
-    let context = parsed["hookSpecificOutput"]["additionalContext"]
-        .as_str()
-        .expect("additionalContext should be a string");
-    assert!(context.contains("secrets-and-security"));
+    assert_hook_response_contains(&stdout, "UserPromptSubmit", "secrets-and-security");
 }
 
 #[test]
@@ -106,16 +108,7 @@ fn session_start_prints_must_read_standards_as_real_hook_json() {
 
     let stdout = run_adapter_hook("session-start", &stdin_json, None);
 
-    let parsed: serde_json::Value =
-        serde_json::from_str(stdout.trim()).expect("stdout should be valid JSON");
-    assert_eq!(
-        parsed["hookSpecificOutput"]["hookEventName"],
-        "SessionStart"
-    );
-    let context = parsed["hookSpecificOutput"]["additionalContext"]
-        .as_str()
-        .expect("additionalContext should be a string");
-    assert!(context.contains("secrets-and-security"));
+    assert_hook_response_contains(&stdout, "SessionStart", "secrets-and-security");
 }
 
 #[test]
@@ -128,16 +121,7 @@ fn codex_user_prompt_submit_prints_matching_standards_as_real_hook_json() {
 
     let stdout = run_adapter_hook_for("codex", "user-prompt-submit", &stdin_json, None);
 
-    let parsed: serde_json::Value =
-        serde_json::from_str(stdout.trim()).expect("stdout should be valid JSON");
-    assert_eq!(
-        parsed["hookSpecificOutput"]["hookEventName"],
-        "UserPromptSubmit"
-    );
-    let context = parsed["hookSpecificOutput"]["additionalContext"]
-        .as_str()
-        .expect("additionalContext should be a string");
-    assert!(context.contains("secrets-and-security"));
+    assert_hook_response_contains(&stdout, "UserPromptSubmit", "secrets-and-security");
 }
 
 #[test]
@@ -147,16 +131,7 @@ fn codex_session_start_prints_must_read_standards_as_real_hook_json() {
 
     let stdout = run_adapter_hook_for("codex", "session-start", &stdin_json, None);
 
-    let parsed: serde_json::Value =
-        serde_json::from_str(stdout.trim()).expect("stdout should be valid JSON");
-    assert_eq!(
-        parsed["hookSpecificOutput"]["hookEventName"],
-        "SessionStart"
-    );
-    let context = parsed["hookSpecificOutput"]["additionalContext"]
-        .as_str()
-        .expect("additionalContext should be a string");
-    assert!(context.contains("secrets-and-security"));
+    assert_hook_response_contains(&stdout, "SessionStart", "secrets-and-security");
 }
 
 struct TempRepo {
