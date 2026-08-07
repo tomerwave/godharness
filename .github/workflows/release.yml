@@ -213,3 +213,73 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
         with:
           packages-dir: wheels
+
+  announce:
+    name: Publish the GitHub release
+    needs: [publish, npm, pypi]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: godharness-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Publish the release and attach every archive
+        env:
+          TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          python3 scripts/check-release.py "$TAG" --notes > notes.md
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file notes.md
+          fi
+
+          gh release upload "$TAG" artifacts/* --clobber
+
+      - name: Every archive is attached
+        env:
+          TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          expected="$(find artifacts -type f | wc -l | tr -d ' ')"
+          attached="$(gh release view "$TAG" --json assets --jq '.assets | length')"
+
+          echo "$attached of $expected archives attached"
+          test "$attached" -ge "$expected"
+
+      - name: Point the floating major tag at this release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          major=v0
+
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$major" >/dev/null 2>&1; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$major" -f sha="$SHA" -F force=true >/dev/null
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$major" -f sha="$SHA" >/dev/null
+          fi
+
+          echo "$major now points at $SHA"
+
+      - name: Notify this repository to sync its own installation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh api repos/${{ github.repository }}/dispatches \
+            -f event_type=godharness-released \
+            -f "client_payload[tag]=$TAG"
