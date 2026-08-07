@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  agree:
+    name: Check the tag agrees with the release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require the tag, the manifest and the changelog to name one version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: python3 scripts/check-release.py "$TAG"
+
+  binaries:
+    name: Build ${{ matrix.target }}
+    needs: agree
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-latest
+            runnable: true
+          - target: x86_64-apple-darwin
+            runner: macos-latest
+            runnable: false
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-24.04-arm
+            runnable: true
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-latest
+            runnable: true
+          - target: x86_64-unknown-linux-musl
+            runner: ubuntu-latest
+            runnable: true
+            musl: true
+          - target: aarch64-unknown-linux-musl
+            runner: ubuntu-24.04-arm
+            runnable: true
+            musl: true
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+            runnable: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: rustup toolchain install 1.97 --profile minimal
+
+      - run: rustup target add ${{ matrix.target }} --toolchain 1.97
+
+      - name: Install the musl toolchain
+        if: matrix.musl
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - run: cargo +1.97 build --release --locked -p godharness-cli --target ${{ matrix.target }}
+        env:
+          CC_x86_64_unknown_linux_musl: ${{ matrix.musl && 'musl-gcc' || '' }}
+          CC_aarch64_unknown_linux_musl: ${{ matrix.musl && 'musl-gcc' || '' }}
+
+      - name: Prove the binary runs and reports its version
+        if: matrix.runnable
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          suffix=""
+          if [ "$RUNNER_OS" = "Windows" ]; then suffix=".exe"; fi
+          printed="$(./target/${{ matrix.target }}/release/godharness$suffix --version)"
+          echo "$printed"
+          printf '%s' "$printed" | grep -Fq "${TAG#v}"
+
+      - name: Prove the musl binary is static
+        if: matrix.musl
+        run: |
+          described="$(file "target/${{ matrix.target }}/release/godharness")"
+          echo "$described"
+          printf '%s' "$described" | grep -q static
+
+      - name: Package
+        if: runner.os != 'Windows'
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          install -m 755 "target/$TARGET/release/godharness" godharness
+          tar -czf "godharness-$TARGET.tar.gz" godharness LICENSE README.md
+          shasum -a 256 "godharness-$TARGET.tar.gz" > "godharness-$TARGET.tar.gz.sha256"
+
+      - name: Package for Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          Copy-Item "target/$env:TARGET/release/godharness.exe" godharness.exe
+          Compress-Archive -Path godharness.exe, LICENSE, README.md -DestinationPath "godharness-$env:TARGET.zip"
+          $hash = (Get-FileHash "godharness-$env:TARGET.zip" -Algorithm SHA256).Hash.ToLower()
+          # WriteAllText rather than Out-File: Out-File ends the line with CRLF, and a checksum
+          # file with a carriage return makes every Unix checker read the filename as ending in
+          # one, so verification fails on a correct download.
+          $line = "$hash  godharness-$env:TARGET.zip`n"
+          [IO.File]::WriteAllText("$PWD/godharness-$env:TARGET.zip.sha256", $line)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: godharness-${{ matrix.target }}
+          path: |
+            godharness-${{ matrix.target }}.tar.gz*
+            godharness-${{ matrix.target }}.zip*
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.target }}
+          path: |
+            godharness
+            godharness.exe
+          if-no-files-found: error
