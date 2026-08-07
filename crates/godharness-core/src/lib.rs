@@ -13,8 +13,9 @@ pub mod standard;
 pub mod suite;
 
 pub use adapters::{
-    AdapterError, ClaudeCodeEvent, FieldMapping, HookRequest, RenderedFile, SessionState,
-    claude_code_hook_response, render_shape_a, write_rendered_files,
+    AdapterError, ClaudeCodeEvent, FieldMapping, HookRequest, InstallError, InstallReport,
+    RenderedFile, SessionState, claude_code_hook_response, enable_adapter, render_shape_a,
+    write_rendered_files,
 };
 pub use check::{CheckError, CheckReport, load_config, load_repository_graph, run_check};
 pub use doctor::{DoctorReport, run_doctor};

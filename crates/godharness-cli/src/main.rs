@@ -51,12 +51,37 @@ enum Command {
         #[arg(long, value_enum)]
         event: AdapterHookEvent,
     },
+    #[command(about = "Manage tool adapters for this repository. Human-facing.")]
+    Adapters {
+        #[command(subcommand)]
+        action: AdaptersCommand,
+    },
+}
+
+#[derive(Subcommand)]
+enum AdaptersCommand {
+    #[command(
+        about = "Wire godharness's live-hook adapter into the given tool's config. Human-facing, safe to rerun."
+    )]
+    Enable {
+        #[arg(value_enum)]
+        tool: AdapterTool,
+    },
 }
 
 #[derive(Clone, ValueEnum)]
 enum AdapterTool {
     ClaudeCode,
     Codex,
+}
+
+impl AdapterTool {
+    fn cli_arg(&self) -> &'static str {
+        match self {
+            AdapterTool::ClaudeCode => "claude-code",
+            AdapterTool::Codex => "codex",
+        }
+    }
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -237,6 +262,34 @@ fn run_adapter_hook(_tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
     ExitCode::SUCCESS
 }
 
+fn run_adapters_enable(tool: AdapterTool) -> ExitCode {
+    let root = current_dir();
+    match godharness_core::enable_adapter(&root, tool.cli_arg()) {
+        Ok(report) => {
+            println!(
+                "godharness adapters enable {}: godharness.yaml {}, {} {}",
+                tool.cli_arg(),
+                if report.godharness_yaml_updated {
+                    "updated"
+                } else {
+                    "already configured"
+                },
+                report.hook_config_path.display(),
+                if report.hook_config_updated {
+                    "updated"
+                } else {
+                    "already configured"
+                },
+            );
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            eprintln!("godharness adapters enable: {error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
@@ -246,5 +299,8 @@ fn main() -> ExitCode {
         Command::Context { prompt, paths } => run_context(prompt, paths),
         Command::Doctor => run_doctor(),
         Command::AdapterHook { tool, event } => run_adapter_hook(tool, event),
+        Command::Adapters {
+            action: AdaptersCommand::Enable { tool },
+        } => run_adapters_enable(tool),
     }
 }
