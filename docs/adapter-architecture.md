@@ -1,8 +1,9 @@
 # Adapter architecture
 
-Status: proposed — a design synthesized from research and discussion, not yet implemented.
-Nothing in this document is a decision until code and tests back it; treat it the way
-AGENTS.md says to treat anything else written down here.
+Status: partially implemented. The Claude Code and Codex hook adapters are built, tested, and
+merged; everything else below is still proposed. Nothing in this document is a decision until
+code and tests back it; treat it the way AGENTS.md says to treat anything else written down
+here.
 
 ## Goal and scope
 
@@ -81,7 +82,7 @@ separate from `init`'s scaffold-once semantics, likely surfaced as part of `chec
 | Tool | Format | Confidence | Note |
 |---|---|---|---|
 | Cursor | `.cursor/rules/*.mdc`, `description`/`globs`/`alwaysApply` frontmatter | Medium — from third-party docs, not independently verified | Closest schema match to godharness's own `Standard` of anything surveyed. |
-| Claude Code | `.claude/rules/*.md` | Medium-low — one real bug confirmed | See [Claude Code](#claude-code). |
+| Claude Code | `.claude/rules/*.md` | **Confirmed broken, not just risky** | See [Claude Code](#claude-code) — dropped as a target, not attempted for any other tool yet either. |
 | GitHub Copilot | `.github/instructions/*.instructions.md`, `applyTo` frontmatter | Medium | Path-only, no "always" flag found. Also noted: path-scoped instructions are documented as supported for Copilot cloud agent / code review on GitHub.com — whether they apply the same way to local Copilot Chat/completions needs direct verification, not assumed from the docs. |
 | Cline | `.clinerules/*.md` directory | Low — glob-scoping specifics not confirmed | Needs direct verification before relying on any scoping behavior. |
 | Windsurf | `.windsurfrules`, freeform text | Medium | No scoping of any kind; whole-suite dump only. |
@@ -92,12 +93,14 @@ separate from `init`'s scaffold-once semantics, likely surfaced as part of `chec
 
 ### Shared core, thin per-tool shim — but two structurally different shim kinds
 
-**JSON-over-stdio tools** (Claude Code, Gemini CLI, and Codex if/when it stabilizes): the
-tool spawns a command, writes JSON to its stdin, reads JSON from its stdout, and uses the
-exit code as part of the decision protocol. The resolution logic is 100% shared — it's
-`godharness context` — only field names and event names differ per tool. This reduces to one
-shared core with a per-tool mapping table at the I/O boundary, structurally identical in
-spirit to the static-file `FieldMapping` approach.
+**JSON-over-stdio tools** (Claude Code, Codex, Gemini CLI): the tool spawns a command, writes
+JSON to its stdin, reads JSON from its stdout, and uses the exit code as part of the decision
+protocol. The resolution logic is 100% shared — it's `godharness context` — only field names
+and event names differ per tool, and for Claude Code and Codex specifically, confirmed by
+real invocation, they don't even differ: the same stdin fields, the same output shape. This
+reduces to one shared core with a per-tool mapping table at the I/O boundary only where a
+tool's contract actually diverges, structurally identical in spirit to the static-file
+`FieldMapping` approach.
 
 Concretely: no separate generated shell script is needed. Since godharness itself is the
 thing users install (see [Distribution](#distribution)), the hook config can point directly
@@ -122,57 +125,76 @@ what's there, never overwrite the file outright.
 
 #### Claude Code
 
-Hook surface is large (30+ events as of this research) — the relevant subset for godharness
-is `UserPromptSubmit` (keyword-only standards, fires once per prompt, no matcher), and
-`SessionStart` (must-read standards, guaranteed-timing injection). `PreToolUse`
-(`Edit|Write` matcher) was viewstone's original approach for path-triggered standards, but:
+**Built and merged.** `godharness adapter-hook claude-code --event <user-prompt-submit|
+session-start>` — `UserPromptSubmit` matches every standard (must-read or not) purely by
+keyword, repeatable prompt after prompt with a configurable debounce
+(`reinject-after-prompts` in `godharness.yaml`); `SessionStart` guarantees must-read
+standards regardless of keyword match, and is source-independent by construction (it never
+inspects the `source` field), so it re-fires after compact/resume/clear/fork with no extra
+code. Verified end-to-end: a real standalone `claude -p` process, with a real
+`.claude/settings.json` hook pointing at the built binary, correctly received the injected
+`additionalContext`.
 
-- **`.claude/rules/*.md` (a native static mechanism, not present in viewstone's research) can
-  replace `PreToolUse` for path-scoped standards entirely** — see the static-file table
-  above. This is lower-risk than a live hook (no process spawn, no JSON contract to keep in
-  sync with Claude Code's schema changes) and should be tried first.
-- **Confirmed bug, not assumption**: the documented `.claude/rules/` frontmatter key is
-  `paths:`, but it's silently broken — only the undocumented `globs:` key actually works
-  ([anthropics/claude-code#17204](https://github.com/anthropics/claude-code/issues/17204)).
-  Any renderer targeting this format must emit `globs:`, not `paths:`.
-- **Unresolved from docs alone**: whether `PreToolUse`'s `hookSpecificOutput` genuinely
-  supports `additionalContext` the way `UserPromptSubmit`/`PostToolUse`/`SessionStart` do —
-  the general schema lists it as common across events, but the concrete `PreToolUse` example
-  in the docs only shows `permissionDecision`/`updatedInput`, and the docs' own
-  file-edit-context example uses `PostToolUse`, not `PreToolUse`. This needs a real
-  invocation to settle, not another doc read (see [Testing strategy](#testing-strategy)). If
-  `.claude/rules/` fully covers path-scoped standards, this question may not matter — but it
-  should be answered before being relied on for anything else.
+`.claude/rules/*.md` (a native static mechanism, not present in viewstone's research) was
+tried first as a lower-risk alternative to a live hook for path-scoped standards, and
+**confirmed broken, not just risky**: four independent negative tests (two blind subagents,
+a real standalone `claude -p` process, both the documented `paths:` array syntax and the
+corrected comma-separated `globs:` syntax from a linked GitHub issue) all found no
+injection. Cross-referencing turned up three open, confirmed bugs on Anthropic's own repo
+saying the same thing
+([#16853](https://github.com/anthropics/claude-code/issues/16853),
+[#21858](https://github.com/anthropics/claude-code/issues/21858),
+[#22170](https://github.com/anthropics/claude-code/issues/22170)) — one reporter states "this
+never worked." Dropped as a target entirely; the hook adapter covers must-read and
+keyword-matched standards, and no path-glob-only static channel exists for Claude Code today.
+
+`PreToolUse`'s `additionalContext` support was flagged as unresolved from docs alone before
+this work started; it's moot now since `.claude/rules/` isn't being pursued and
+`UserPromptSubmit`/`SessionStart` cover the two channels this project actually needs.
 
 Distribution: Claude Code plugins can bundle `hooks/hooks.json` and be installed through the
-marketplace mechanism, which is worth using once the hook adapter is proven, rather than
-requiring users to hand-edit `.claude/settings.json`.
+marketplace mechanism, which is worth using once demand exists, rather than requiring users
+to hand-edit `.claude/settings.json`.
 
 #### Codex
 
-Materially riskier than Claude Code right now, not just a second instance of the same
-pattern:
+**Built and merged — reuses the Claude Code adapter's code verbatim, no new logic.**
+Verified with two independent real `codex exec --dangerously-bypass-hook-trust` runs (once
+per CLI tool-argument name, `claude-code` then `codex`, to rule out anything argument-specific)
+against a real `.codex/hooks.json` pointing at the built binary. Both times the injected
+`additionalContext` was genuinely visible to the model.
 
-- Hooks are **experimental and opt-in** (`features.codex_hooks = true` in `~/.codex/config.toml`),
-  shipped ~March 2026, not available on Windows, disabled by default.
-- `PreToolUse` originally covered Bash only; `apply_patch` coverage was added later (~v0.123.0,
-  April 2026) per an open feature request
-  ([openai/codex#18491](https://github.com/openai/codex/issues/18491)) that also confirms
-  `Edit`/`Write`/`Read`/web-fetch/MCP tool calls still don't trigger it as of that issue.
-- A separate, officially-tracked open bug
-  ([openai/codex#17532](https://github.com/openai/codex/issues/17532)): hooks configured via
-  repo-local `.codex/config.toml` don't fire in interactive sessions at all.
-- Third-party documentation of the exact `hooks.json` shape is internally contradictory
-  (event names at file root with no wrapper, versus a `{"hooks": {...}}` wrapper) across
-  sources that otherwise look credible. Nothing here should be trusted without a real
-  `codex exec` run against it.
+The risk assessment before verification overstated the danger, worth recording so it isn't
+repeated: third-party docs described Codex's `hooks.json` shape as internally contradictory
+(event names at file root with no wrapper, versus various wrapper shapes). The real shape,
+confirmed by reading `~/.codex/hooks.json` from this machine's own already-working
+`oh-my-codex` installation (a genuine, currently-firing production config, the best ground
+truth available) — **is structurally identical to Claude Code's**: the same `{"hooks": {...}}`
+wrapper, the same PascalCase event names (`SessionStart`, `UserPromptSubmit`, `PreToolUse`,
+`PostToolUse`, `Stop`), the same `matcher` field, and — confirmed by reading that
+installation's own hook script — the same `{"hookSpecificOutput": {"hookEventName": ...,
+"additionalContext": ...}}` output shape for `SessionStart`/`UserPromptSubmit`. This is why
+zero new adapter code was needed: the existing Claude Code implementation's stdin/stdout
+contract already matched.
 
-Codex reads `AGENTS.md` natively (confirmed — it's one of 28+ tools on the now-Linux-Foundation-
-stewarded AGENTS.md convention, which this repository already follows). That gives Codex a
-safe, zero-risk baseline today with no adapter code at all: keep this repository's own
-AGENTS.md accurate (ongoing) and any repo installing godharness gets *some* Codex coverage
-immediately. The hook adapter is real future work, but gated behind direct verification
-first — see [Build order](#build-order).
+One real, version-specific finding from the live run: `[features].codex_hooks` is
+**deprecated**, replaced by `[features].hooks` (Codex printed the deprecation warning
+directly). Config generated by a future `godharness adapters enable codex` should target the
+new flag name.
+
+Two things from the original research remain genuinely open, not resolved by this
+verification, since neither was exercised: `PreToolUse` still only covers Bash plus
+`apply_patch` as of the linked issue
+([openai/codex#18491](https://github.com/openai/codex/issues/18491)), so a future
+path-triggered Codex channel needs its own verification pass; and the repo-local-config bug
+([openai/codex#17532](https://github.com/openai/codex/issues/17532)) was reported for hooks
+configured inside `.codex/config.toml`, not the project-level `.codex/hooks.json` file this
+adapter actually uses — untested whether that distinction matters, but the verified path here
+avoided the exact configuration shape the bug report names.
+
+Codex also reads `AGENTS.md` natively (confirmed — it's one of 28+ tools on the now-Linux-
+Foundation-stewarded AGENTS.md convention, which this repository already follows), giving any
+repo installing godharness a zero-risk baseline even before the hook adapter is configured.
 
 #### Gemini CLI
 
@@ -249,36 +271,39 @@ for exactly that reason. Before any adapter is considered done:
 
 ## Open risks, flagged explicitly rather than assumed away
 
-- Claude Code: whether `PreToolUse` supports `additionalContext` (see
-  [Claude Code](#claude-code)).
-- Codex: whether the real `hooks.json` shape matches either contradictory third-party
-  description, and whether the repo-local-config bug
-  ([openai/codex#17532](https://github.com/openai/codex/issues/17532)) affects the intended
-  installation path.
+- Codex: `PreToolUse` path-triggered standards (Bash/`apply_patch` only, per
+  [openai/codex#18491](https://github.com/openai/codex/issues/18491)) and whether the
+  repo-local-config bug ([openai/codex#17532](https://github.com/openai/codex/issues/17532))
+  affects any future configuration shape beyond the project-level `.codex/hooks.json` already
+  verified — both unexercised by the verification done so far, not resolved by it.
 - Cursor/Copilot/Cline: frontmatter field behavior sourced from third-party docs only, not
-  independently confirmed the way the Claude Code `.claude/rules/` bug was.
-- Every "confidence: medium/low" row above is real future verification work, not a settled
-  fact this document is asserting.
+  independently confirmed the way the Claude Code `.claude/rules/` bug was — and given that
+  bug turned out to be real, these should be verified the same way before being relied on.
+- Every "confidence: medium/low" row in the static-file table above is real future
+  verification work, not a settled fact this document is asserting.
 
 ## Build order
 
-Ranked by risk and dependency, with Claude Code and Codex prioritized per direct instruction:
+Ranked by risk and dependency, with Claude Code and Codex prioritized per direct instruction.
+Struck-through steps are done.
 
-1. **Generic static-file renderer** (Shape A) — foundational, lowest risk (no live process, no
-   experimental flags). First output: Claude Code's `.claude/rules/*.md`.
-2. **Claude Code hook adapter** — `UserPromptSubmit` (keyword-only) and `SessionStart`
-   (must-read timing). Closes the two gaps the static renderer can't cover. Claude Code fully
-   covered after this step.
-3. **Codex, safe path** — no new adapter code, just keep this repository's (and any installing
-   repo's) AGENTS.md accurate, since Codex already reads it natively.
-4. **Codex hook adapter** — gated behind a real verification spike (an actual `codex exec` run
-   with `features.codex_hooks = true`) before writing adapter code, given the contradictory
-   third-party docs and the two open upstream issues.
-5. **Extend the Shape A renderer** to Cursor, Copilot, Cline — near-free once step 1 exists,
-   each is a new field-mapping entry.
+1. ~~**Generic static-file renderer** (Shape A)~~ — built as reusable infrastructure
+   (`render_shape_a`/`FieldMapping`/`write_rendered_files`), but its original target,
+   Claude Code's `.claude/rules/*.md`, was dropped once confirmed broken (see
+   [Claude Code](#claude-code)). No per-tool mapping ships yet — every "confidence" row in
+   the static-file table is still unverified.
+2. ~~**Claude Code hook adapter**~~ — `UserPromptSubmit` (keyword match, any standard,
+   debounce-configurable) and `SessionStart` (must-read guarantee). Built, tested three
+   tiers deep, merged.
+3. ~~**Codex, safe path**~~ — no new code needed; already true via native `AGENTS.md` support.
+4. ~~**Codex hook adapter**~~ — verification spike found the real contract matches Claude
+   Code's exactly; shipped as a CLI tool-argument addition with zero new adapter logic.
+5. **Extend the Shape A renderer** to Cursor, Copilot, Cline — each needs its own
+   verification pass first (per the newly-elevated risk above), then a field-mapping entry.
 6. **Shape B renderer** for Windsurf, Aider, Continue.
 7. **Gemini CLI hook adapter** — validates the shared-core-plus-shim pattern generalizes past
-   Claude Code; official/stable, unlike Codex's current state.
+   Claude Code/Codex; official/stable, and worth a verification spike the same way Codex got
+   one before assuming its documented contract holds.
 8. **opencode** — last. Needs a separate published JS/TS plugin package, not a config file a
    user drops in, which cuts against this project's single-binary premise. Not in the current
    priority list at all.

@@ -25,3 +25,4 @@ docs/superpowers/
 
 # oh-my-claudecode local runtime/session state
 .omc/
+.omx/
