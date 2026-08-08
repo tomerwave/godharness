@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before `1.0`, a `0.x` release may
 change the CLI surface or configuration schema.
 
+## [0.1.2] - 2026-08-08
+
+### Added
+
+- `recommended@1` expanded from 13 to 26 standards: dependency-direction,
+  interface-segregation, liskov-substitutability, single-level-of-abstraction,
+  dont-repeat-yourself, no-broken-windows, ubiquitous-language, test-pyramid-shape,
+  test-independence, flaky-test-is-signal, injection-parameterize,
+  server-side-authorization, and pin-and-verify-dependencies, drawn from Clean Code, Clean
+  Architecture, SOLID, DDD, testing practice, and security sources.
+
 ## [0.1.1] - 2026-08-07
 
 ### Fixed
