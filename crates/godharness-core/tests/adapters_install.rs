@@ -142,7 +142,7 @@ fn enabling_claude_code_installs_all_four_recommended_skills() {
 
     let report = enable_adapter(&root.path, "claude-code").expect("enable adapter");
 
-    assert_eq!(report.skills_installed.len(), 4);
+    assert_eq!(report.skills_installed.len(), 13);
     assert!(
         root.path
             .join(".claude/skills/atomic-commits/SKILL.md")
@@ -159,7 +159,7 @@ fn enabling_codex_installs_skills_under_dot_agents_skills() {
 
     let report = enable_adapter(&root.path, "codex").expect("enable adapter");
 
-    assert_eq!(report.skills_installed.len(), 4);
+    assert_eq!(report.skills_installed.len(), 13);
     assert!(
         root.path
             .join(".agents/skills/property-based-testing/SKILL.md")

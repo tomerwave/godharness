@@ -38,12 +38,23 @@ pub const RECOMMENDED_V1: SuiteManifest = SuiteManifest {
         "test-data-builders",
         "structured-logging-over-printf",
         "small-reviewable-changes",
+        "leave-code-cleaner-than-you-found-it",
+        "concise-communication",
     ],
     skills: &[
         "isolate-refactoring-from-behavior-change",
         "property-based-testing",
         "atomic-commits",
         "resource-oriented-api-design",
+        "systematic-debugging",
+        "verification-before-completion",
+        "requesting-code-review",
+        "receiving-code-review",
+        "simplify",
+        "ai-slop-cleaner",
+        "research-with-evidence",
+        "frontend-design",
+        "retrospective-workflow-review",
     ],
 };
 
