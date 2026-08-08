@@ -58,6 +58,8 @@ fn context_prints_the_must_read_standards_as_json() {
             "secrets-and-security",
             "simplify-before-done",
             "verify-through-real-path",
+            "leave-code-cleaner-than-you-found-it",
+            "concise-communication",
         ]
     );
 

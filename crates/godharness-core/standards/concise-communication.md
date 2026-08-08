@@ -3,7 +3,7 @@ id: concise-communication
 title: Concise Communication
 keywords: [be concise, verbose, conciseness, terse, filler words]
 paths: []
-must-read: false
+must-read: true
 supersedes: []
 relates-to: [structured-logging-over-printf]
 ---
