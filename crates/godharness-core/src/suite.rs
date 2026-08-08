@@ -1,129 +1,48 @@
-use std::path::Path;
+use crate::registry;
+use crate::standard::{Standard, StandardError};
 
-use crate::standard::{Standard, StandardError, parse_standard};
+pub struct SuiteManifest {
+    pub standards: &'static [&'static str],
+}
 
-const RECOMMENDED_V1_DOCUMENTS: &[(&str, &str)] = &[
-    (
-        "suites/recommended/v1/naming.md",
-        include_str!("../suites/recommended/v1/naming.md"),
-    ),
-    (
-        "suites/recommended/v1/small-focused-units.md",
-        include_str!("../suites/recommended/v1/small-focused-units.md"),
-    ),
-    (
-        "suites/recommended/v1/error-handling.md",
-        include_str!("../suites/recommended/v1/error-handling.md"),
-    ),
-    (
-        "suites/recommended/v1/secrets-and-security.md",
-        include_str!("../suites/recommended/v1/secrets-and-security.md"),
-    ),
-    (
-        "suites/recommended/v1/configuration-boundaries.md",
-        include_str!("../suites/recommended/v1/configuration-boundaries.md"),
-    ),
-    (
-        "suites/recommended/v1/testing.md",
-        include_str!("../suites/recommended/v1/testing.md"),
-    ),
-    (
-        "suites/recommended/v1/runtime-validation.md",
-        include_str!("../suites/recommended/v1/runtime-validation.md"),
-    ),
-    (
-        "suites/recommended/v1/architecture-decisions.md",
-        include_str!("../suites/recommended/v1/architecture-decisions.md"),
-    ),
-    (
-        "suites/recommended/v1/prefer-existing-solutions.md",
-        include_str!("../suites/recommended/v1/prefer-existing-solutions.md"),
-    ),
-    (
-        "suites/recommended/v1/design-for-extension.md",
-        include_str!("../suites/recommended/v1/design-for-extension.md"),
-    ),
-    (
-        "suites/recommended/v1/simplify-before-done.md",
-        include_str!("../suites/recommended/v1/simplify-before-done.md"),
-    ),
-    (
-        "suites/recommended/v1/verify-through-real-path.md",
-        include_str!("../suites/recommended/v1/verify-through-real-path.md"),
-    ),
-    (
-        "suites/recommended/v1/automate-everything.md",
-        include_str!("../suites/recommended/v1/automate-everything.md"),
-    ),
-    (
-        "suites/recommended/v1/dependency-direction.md",
-        include_str!("../suites/recommended/v1/dependency-direction.md"),
-    ),
-    (
-        "suites/recommended/v1/interface-segregation.md",
-        include_str!("../suites/recommended/v1/interface-segregation.md"),
-    ),
-    (
-        "suites/recommended/v1/liskov-substitutability.md",
-        include_str!("../suites/recommended/v1/liskov-substitutability.md"),
-    ),
-    (
-        "suites/recommended/v1/single-level-of-abstraction.md",
-        include_str!("../suites/recommended/v1/single-level-of-abstraction.md"),
-    ),
-    (
-        "suites/recommended/v1/dont-repeat-yourself.md",
-        include_str!("../suites/recommended/v1/dont-repeat-yourself.md"),
-    ),
-    (
-        "suites/recommended/v1/no-broken-windows.md",
-        include_str!("../suites/recommended/v1/no-broken-windows.md"),
-    ),
-    (
-        "suites/recommended/v1/ubiquitous-language.md",
-        include_str!("../suites/recommended/v1/ubiquitous-language.md"),
-    ),
-    (
-        "suites/recommended/v1/test-pyramid-shape.md",
-        include_str!("../suites/recommended/v1/test-pyramid-shape.md"),
-    ),
-    (
-        "suites/recommended/v1/test-independence.md",
-        include_str!("../suites/recommended/v1/test-independence.md"),
-    ),
-    (
-        "suites/recommended/v1/flaky-test-is-signal.md",
-        include_str!("../suites/recommended/v1/flaky-test-is-signal.md"),
-    ),
-    (
-        "suites/recommended/v1/injection-parameterize.md",
-        include_str!("../suites/recommended/v1/injection-parameterize.md"),
-    ),
-    (
-        "suites/recommended/v1/server-side-authorization.md",
-        include_str!("../suites/recommended/v1/server-side-authorization.md"),
-    ),
-    (
-        "suites/recommended/v1/pin-and-verify-dependencies.md",
-        include_str!("../suites/recommended/v1/pin-and-verify-dependencies.md"),
-    ),
-    (
-        "suites/recommended/v1/test-data-builders.md",
-        include_str!("../suites/recommended/v1/test-data-builders.md"),
-    ),
-    (
-        "suites/recommended/v1/structured-logging-over-printf.md",
-        include_str!("../suites/recommended/v1/structured-logging-over-printf.md"),
-    ),
-    (
-        "suites/recommended/v1/small-reviewable-changes.md",
-        include_str!("../suites/recommended/v1/small-reviewable-changes.md"),
-    ),
-];
+pub const RECOMMENDED_V1: SuiteManifest = SuiteManifest {
+    standards: &[
+        "naming",
+        "small-focused-units",
+        "error-handling",
+        "secrets-and-security",
+        "configuration-boundaries",
+        "testing",
+        "runtime-validation",
+        "architecture-decisions",
+        "prefer-existing-solutions",
+        "design-for-extension",
+        "simplify-before-done",
+        "verify-through-real-path",
+        "automate-everything",
+        "dependency-direction",
+        "interface-segregation",
+        "liskov-substitutability",
+        "single-level-of-abstraction",
+        "dont-repeat-yourself",
+        "no-broken-windows",
+        "ubiquitous-language",
+        "test-pyramid-shape",
+        "test-independence",
+        "flaky-test-is-signal",
+        "injection-parameterize",
+        "server-side-authorization",
+        "pin-and-verify-dependencies",
+        "test-data-builders",
+        "structured-logging-over-printf",
+        "small-reviewable-changes",
+    ],
+};
 
 pub fn recommended_v1() -> Result<Vec<Standard>, StandardError> {
-    RECOMMENDED_V1_DOCUMENTS
+    RECOMMENDED_V1
+        .standards
         .iter()
-        .map(|(path, document)| parse_standard(document, Path::new(path)))
+        .map(|id| registry::standard(id))
         .collect()
 }

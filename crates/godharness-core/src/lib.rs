@@ -8,6 +8,7 @@ pub mod check;
 pub mod doctor;
 pub mod graph;
 pub mod init;
+pub mod registry;
 pub mod resolve;
 pub mod standard;
 pub mod suite;

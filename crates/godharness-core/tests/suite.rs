@@ -3,6 +3,51 @@ use godharness_core::{build_graph, recommended_v1};
 const RECOMMENDED_V1_STANDARD_COUNT: usize = 29;
 
 #[test]
+fn recommended_v1_ids_are_unchanged_by_the_registry_refactor() {
+    let standards = recommended_v1().expect("every embedded document should parse");
+    let mut ids: Vec<&str> = standards
+        .iter()
+        .map(|standard| standard.id.as_str())
+        .collect();
+    ids.sort_unstable();
+
+    assert_eq!(
+        ids,
+        vec![
+            "architecture-decisions",
+            "automate-everything",
+            "configuration-boundaries",
+            "dependency-direction",
+            "design-for-extension",
+            "dont-repeat-yourself",
+            "error-handling",
+            "flaky-test-is-signal",
+            "injection-parameterize",
+            "interface-segregation",
+            "liskov-substitutability",
+            "naming",
+            "no-broken-windows",
+            "pin-and-verify-dependencies",
+            "prefer-existing-solutions",
+            "runtime-validation",
+            "secrets-and-security",
+            "server-side-authorization",
+            "simplify-before-done",
+            "single-level-of-abstraction",
+            "small-focused-units",
+            "small-reviewable-changes",
+            "structured-logging-over-printf",
+            "test-data-builders",
+            "test-independence",
+            "test-pyramid-shape",
+            "testing",
+            "ubiquitous-language",
+            "verify-through-real-path",
+        ]
+    );
+}
+
+#[test]
 fn every_embedded_document_parses() {
     let standards = recommended_v1().expect("every embedded document should parse");
 
