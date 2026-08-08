@@ -6,6 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before `1.0`, a `0.x` release may
 change the CLI surface or configuration schema.
 
+## [0.1.3] - 2026-08-08
+
+### Added
+
+- `recommended@1` expanded from 26 to 29 standards: test-data-builders,
+  structured-logging-over-printf, and small-reviewable-changes.
+
 ## [0.1.2] - 2026-08-08
 
 ### Added
