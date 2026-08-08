@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use crate::error::string_error;
 use crate::graph::{GraphError, StandardGraph, build_graph};
 use crate::skill::Skill;
 use crate::standard::{Standard, StandardError, parse_standard};
@@ -8,52 +9,11 @@ use crate::{Config, ConfigError, parse_config};
 
 const DEFAULT_STANDARDS_GLOB: &str = "docs/godharness/**/*.md";
 
-#[derive(Debug)]
-pub struct CheckError(String);
-
-impl std::fmt::Display for CheckError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{}", self.0)
-    }
-}
-
-impl std::error::Error for CheckError {}
-
-impl From<ConfigError> for CheckError {
-    fn from(error: ConfigError) -> Self {
-        CheckError(error.to_string())
-    }
-}
-
-impl From<StandardError> for CheckError {
-    fn from(error: StandardError) -> Self {
-        CheckError(error.to_string())
-    }
-}
-
-impl From<GraphError> for CheckError {
-    fn from(error: GraphError) -> Self {
-        CheckError(error.to_string())
-    }
-}
-
-impl From<std::io::Error> for CheckError {
-    fn from(error: std::io::Error) -> Self {
-        CheckError(error.to_string())
-    }
-}
-
-impl From<glob::PatternError> for CheckError {
-    fn from(error: glob::PatternError) -> Self {
-        CheckError(error.to_string())
-    }
-}
-
-impl From<glob::GlobError> for CheckError {
-    fn from(error: glob::GlobError) -> Self {
-        CheckError(error.to_string())
-    }
-}
+string_error!(
+    CheckError,
+    "",
+    from: ConfigError, StandardError, GraphError, std::io::Error, glob::PatternError, glob::GlobError,
+);
 
 #[derive(Debug, PartialEq)]
 pub struct CheckReport {

@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
-use std::fmt;
 
 use serde::Deserialize;
 
 pub mod adapters;
 pub mod check;
 pub mod doctor;
+mod error;
 pub mod graph;
 pub mod init;
 pub mod registry;
@@ -14,6 +14,8 @@ pub mod skill;
 pub mod standard;
 pub mod suite;
 pub mod update;
+
+use error::string_error;
 
 pub use adapters::{
     AdapterError, ClaudeCodeEvent, FieldMapping, HookRequest, InstallError, InstallReport,
@@ -45,16 +47,7 @@ pub struct Config {
     pub reinject_after_prompts: u32,
 }
 
-#[derive(Debug)]
-pub struct ConfigError(String);
-
-impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "invalid godharness configuration: {}", self.0)
-    }
-}
-
-impl std::error::Error for ConfigError {}
+string_error!(ConfigError, "invalid godharness configuration: ");
 
 pub fn parse_config(yaml: &str) -> Result<Config, ConfigError> {
     serde_yaml::from_str(yaml).map_err(|error| ConfigError(error.to_string()))

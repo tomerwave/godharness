@@ -2,46 +2,13 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value, json};
 
-#[derive(Debug)]
-pub struct InstallError(String);
+use crate::error::string_error;
 
-impl std::fmt::Display for InstallError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{}", self.0)
-    }
-}
-
-impl std::error::Error for InstallError {}
-
-impl From<std::io::Error> for InstallError {
-    fn from(error: std::io::Error) -> Self {
-        InstallError(error.to_string())
-    }
-}
-
-impl From<serde_json::Error> for InstallError {
-    fn from(error: serde_json::Error) -> Self {
-        InstallError(error.to_string())
-    }
-}
-
-impl From<serde_yaml::Error> for InstallError {
-    fn from(error: serde_yaml::Error) -> Self {
-        InstallError(error.to_string())
-    }
-}
-
-impl From<crate::init::InitError> for InstallError {
-    fn from(error: crate::init::InitError) -> Self {
-        InstallError(error.to_string())
-    }
-}
-
-impl From<crate::check::CheckError> for InstallError {
-    fn from(error: crate::check::CheckError) -> Self {
-        InstallError(error.to_string())
-    }
-}
+string_error!(
+    InstallError,
+    "",
+    from: std::io::Error, serde_json::Error, serde_yaml::Error, crate::init::InitError, crate::check::CheckError,
+);
 
 #[derive(Debug, PartialEq)]
 pub struct InstallReport {

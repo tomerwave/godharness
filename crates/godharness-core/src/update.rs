@@ -3,31 +3,11 @@ use std::path::Path;
 use crate::Config;
 use crate::adapters::{InstallError, enable_adapter};
 use crate::check::{CheckError, enabled_adapter_names, load_config};
+use crate::error::string_error;
 
 const KNOWN_SUITES: &[&str] = &["recommended@1"];
 
-#[derive(Debug)]
-pub struct UpdateError(String);
-
-impl std::fmt::Display for UpdateError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{}", self.0)
-    }
-}
-
-impl std::error::Error for UpdateError {}
-
-impl From<CheckError> for UpdateError {
-    fn from(error: CheckError) -> Self {
-        UpdateError(error.to_string())
-    }
-}
-
-impl From<InstallError> for UpdateError {
-    fn from(error: InstallError) -> Self {
-        UpdateError(error.to_string())
-    }
-}
+string_error!(UpdateError, "", from: CheckError, InstallError);
 
 #[derive(Debug, Default, PartialEq)]
 pub struct UpdateReport {

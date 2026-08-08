@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use crate::error::string_error;
+
 const STARTER_CONFIG: &str = "version: 1\nsuites: [recommended@1]\n";
 
 const STARTER_STANDARD: &str = "\
@@ -27,22 +29,7 @@ misleads anyone into thinking it's a real standard.
 Delete this file once you've written a real standard, or edit it into one.
 ";
 
-#[derive(Debug)]
-pub struct InitError(String);
-
-impl std::fmt::Display for InitError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{}", self.0)
-    }
-}
-
-impl std::error::Error for InitError {}
-
-impl From<std::io::Error> for InitError {
-    fn from(error: std::io::Error) -> Self {
-        InitError(error.to_string())
-    }
-}
+string_error!(InitError, "", from: std::io::Error);
 
 #[derive(Debug, PartialEq)]
 pub struct InitReport {

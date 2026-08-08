@@ -4,6 +4,8 @@ use gray_matter::Matter;
 use gray_matter::engine::YAML;
 use serde::Deserialize;
 
+use crate::error::string_error;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Skill {
     pub id: String,
@@ -13,16 +15,7 @@ pub struct Skill {
     pub source_path: PathBuf,
 }
 
-#[derive(Debug)]
-pub struct SkillError(String);
-
-impl std::fmt::Display for SkillError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "invalid skill document: {}", self.0)
-    }
-}
-
-impl std::error::Error for SkillError {}
+string_error!(SkillError, "invalid skill document: ");
 
 #[derive(Debug, Deserialize)]
 struct Frontmatter {

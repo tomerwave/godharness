@@ -1,10 +1,14 @@
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, OnceLock};
 
 use glob::Pattern;
 use gray_matter::Matter;
 use gray_matter::engine::YAML;
 use regex::Regex;
 use serde::Deserialize;
+
+use crate::error::string_error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Standard {
@@ -21,16 +25,7 @@ pub struct Standard {
     pub source_path: PathBuf,
 }
 
-#[derive(Debug, Clone)]
-pub struct StandardError(String);
-
-impl std::fmt::Display for StandardError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "invalid standard document: {}", self.0)
-    }
-}
-
-impl std::error::Error for StandardError {}
+string_error!(StandardError, "invalid standard document: ");
 
 #[derive(Debug, Deserialize)]
 struct Frontmatter {
@@ -82,11 +77,23 @@ pub fn parse_standard(document: &str, source_path: &Path) -> Result<Standard, St
     })
 }
 
-fn word_boundary_match(text: &str, keyword: &str) -> bool {
+fn compiled_keyword_regex(keyword: &str) -> Option<Regex> {
+    static CACHE: OnceLock<Mutex<HashMap<String, Regex>>> = OnceLock::new();
+    let mut cache = CACHE
+        .get_or_init(|| Mutex::new(HashMap::new()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    if let Some(compiled) = cache.get(keyword) {
+        return Some(compiled.clone());
+    }
     let pattern = format!(r"(?i)\b{}\b", regex::escape(keyword));
-    Regex::new(&pattern)
-        .map(|compiled| compiled.is_match(text))
-        .unwrap_or(false)
+    let compiled = Regex::new(&pattern).ok()?;
+    cache.insert(keyword.to_string(), compiled.clone());
+    Some(compiled)
+}
+
+fn word_boundary_match(text: &str, keyword: &str) -> bool {
+    compiled_keyword_regex(keyword).is_some_and(|compiled| compiled.is_match(text))
 }
 
 pub fn keyword_matches(prompt: &str, keywords: &[String]) -> bool {
@@ -95,10 +102,22 @@ pub fn keyword_matches(prompt: &str, keywords: &[String]) -> bool {
         .any(|keyword| word_boundary_match(prompt, keyword))
 }
 
+fn compiled_glob(glob: &str) -> Option<Pattern> {
+    static CACHE: OnceLock<Mutex<HashMap<String, Pattern>>> = OnceLock::new();
+    let mut cache = CACHE
+        .get_or_init(|| Mutex::new(HashMap::new()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    if let Some(compiled) = cache.get(glob) {
+        return Some(compiled.clone());
+    }
+    let compiled = Pattern::new(glob).ok()?;
+    cache.insert(glob.to_string(), compiled.clone());
+    Some(compiled)
+}
+
 pub fn path_matches(file_path: &str, globs: &[String]) -> bool {
-    globs.iter().any(|glob| {
-        Pattern::new(glob)
-            .map(|compiled| compiled.matches(file_path))
-            .unwrap_or(false)
-    })
+    globs
+        .iter()
+        .any(|glob| compiled_glob(glob).is_some_and(|compiled| compiled.matches(file_path)))
 }
