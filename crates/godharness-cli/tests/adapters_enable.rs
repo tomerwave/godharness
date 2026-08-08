@@ -73,3 +73,19 @@ fn enabling_twice_via_the_real_binary_is_idempotent() {
     let stdout = String::from_utf8_lossy(&second.stdout);
     assert!(stdout.contains("already configured"));
 }
+
+#[test]
+fn enable_claude_code_installs_skills_via_the_real_binary() {
+    let repo = TempRepo::new("skills");
+
+    let output = run_adapters_enable(&repo.path, "claude-code");
+
+    assert!(output.status.success());
+    assert!(
+        repo.path
+            .join(".claude/skills/atomic-commits/SKILL.md")
+            .exists()
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("4 skill(s) installed"));
+}

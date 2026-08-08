@@ -271,7 +271,7 @@ fn run_adapters_enable(tool: AdapterTool) -> ExitCode {
     match godharness_core::enable_adapter(&root, tool.cli_arg()) {
         Ok(report) => {
             println!(
-                "godharness adapters enable {}: godharness.yaml {}, {} {}",
+                "godharness adapters enable {}: godharness.yaml {}, {} {}, {} skill(s) installed",
                 tool.cli_arg(),
                 if report.godharness_yaml_updated {
                     "updated"
@@ -284,6 +284,7 @@ fn run_adapters_enable(tool: AdapterTool) -> ExitCode {
                 } else {
                     "already configured"
                 },
+                report.skills_installed.len(),
             );
             ExitCode::SUCCESS
         }
