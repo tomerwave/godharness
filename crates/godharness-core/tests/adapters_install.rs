@@ -151,3 +151,61 @@ fn enabling_an_unknown_tool_returns_an_error() {
 
     assert!(result.is_err());
 }
+
+#[test]
+fn enabling_claude_code_installs_all_four_recommended_skills() {
+    let root = TempRoot::new("skills-claude-code");
+
+    let report = enable_adapter(&root.path, "claude-code").expect("enable adapter");
+
+    assert_eq!(report.skills_installed.len(), 4);
+    assert!(
+        root.path
+            .join(".claude/skills/atomic-commits/SKILL.md")
+            .exists()
+    );
+    let content = std::fs::read_to_string(root.path.join(".claude/skills/atomic-commits/SKILL.md"))
+        .expect("read installed skill");
+    assert!(content.contains("name: atomic-commits"));
+}
+
+#[test]
+fn enabling_codex_installs_skills_under_dot_agents_skills() {
+    let root = TempRoot::new("skills-codex");
+
+    let report = enable_adapter(&root.path, "codex").expect("enable adapter");
+
+    assert_eq!(report.skills_installed.len(), 4);
+    assert!(
+        root.path
+            .join(".agents/skills/property-based-testing/SKILL.md")
+            .exists()
+    );
+}
+
+#[test]
+fn enabling_twice_does_not_rewrite_unchanged_skills() {
+    let root = TempRoot::new("skills-idempotent");
+
+    enable_adapter(&root.path, "claude-code").expect("first enable");
+    let second = enable_adapter(&root.path, "claude-code").expect("second enable");
+
+    assert!(second.skills_installed.is_empty());
+}
+
+#[test]
+fn enabling_does_not_touch_a_skill_directory_it_did_not_create() {
+    let root = TempRoot::new("skills-preserve-foreign");
+    std::fs::create_dir_all(root.path.join(".claude/skills/my-own-skill")).expect("create dir");
+    std::fs::write(
+        root.path.join(".claude/skills/my-own-skill/SKILL.md"),
+        "---\nname: my-own-skill\ndescription: not godharness's.\n---\n\nMine.\n",
+    )
+    .expect("write foreign skill");
+
+    enable_adapter(&root.path, "claude-code").expect("enable adapter");
+
+    let content = std::fs::read_to_string(root.path.join(".claude/skills/my-own-skill/SKILL.md"))
+        .expect("foreign skill should be untouched");
+    assert!(content.contains("Mine."));
+}
