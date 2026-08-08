@@ -1,3 +1,8 @@
+---
+name: property-based-testing
+description: How to frame invariants and choose generators for property-based tests, rather than hand-picked examples.
+---
+
 # Property-Based Testing
 
 Source: Claessen & Hughes, *QuickCheck: A Lightweight Tool for Random Testing of Haskell

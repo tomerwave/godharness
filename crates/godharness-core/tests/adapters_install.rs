@@ -1,26 +1,10 @@
 use godharness_core::enable_adapter;
 
-struct TempRoot {
-    path: std::path::PathBuf,
-}
+mod common;
+use common::TempRoot;
 
-impl TempRoot {
-    #[allow(clippy::expect_used)]
-    fn new(name: &str) -> Self {
-        let path = std::env::temp_dir().join(format!(
-            "godharness-core-test-install-{name}-{}",
-            std::process::id()
-        ));
-        let _ = std::fs::remove_dir_all(&path);
-        std::fs::create_dir_all(&path).expect("create temp root");
-        Self { path }
-    }
-}
-
-impl Drop for TempRoot {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.path);
-    }
+fn temp_root(name: &str) -> TempRoot {
+    TempRoot::new("godharness-core-test-install", name)
 }
 
 #[allow(clippy::expect_used)]
@@ -37,7 +21,7 @@ fn read_yaml(path: &std::path::Path) -> serde_yaml::Value {
 
 #[test]
 fn enabling_claude_code_writes_both_hook_events() {
-    let root = TempRoot::new("claude-code-fresh");
+    let root = temp_root("claude-code-fresh");
 
     let report = enable_adapter(&root.path, "claude-code").expect("enable adapter");
 
@@ -63,7 +47,7 @@ fn enabling_claude_code_writes_both_hook_events() {
 
 #[test]
 fn enabling_codex_writes_to_codex_hooks_json() {
-    let root = TempRoot::new("codex-fresh");
+    let root = temp_root("codex-fresh");
 
     let report = enable_adapter(&root.path, "codex").expect("enable adapter");
 
@@ -82,7 +66,7 @@ fn enabling_codex_writes_to_codex_hooks_json() {
 
 #[test]
 fn enabling_twice_does_not_duplicate_entries() {
-    let root = TempRoot::new("idempotent");
+    let root = temp_root("idempotent");
 
     enable_adapter(&root.path, "claude-code").expect("first enable");
     let second = enable_adapter(&root.path, "claude-code").expect("second enable");
@@ -102,7 +86,7 @@ fn enabling_twice_does_not_duplicate_entries() {
 
 #[test]
 fn enabling_preserves_unrelated_hooks_and_top_level_keys() {
-    let root = TempRoot::new("preserve");
+    let root = temp_root("preserve");
     std::fs::create_dir_all(root.path.join(".claude")).expect("create .claude dir");
     std::fs::write(
         root.path.join(".claude/settings.json"),
@@ -126,7 +110,7 @@ fn enabling_preserves_unrelated_hooks_and_top_level_keys() {
 
 #[test]
 fn enabling_preserves_existing_godharness_yaml_content() {
-    let root = TempRoot::new("preserve-yaml");
+    let root = temp_root("preserve-yaml");
     std::fs::write(
         root.path.join("godharness.yaml"),
         "version: 1\nsuites: [recommended@1]\nstandards:\n  - docs/engineering/**\n",
@@ -145,9 +129,67 @@ fn enabling_preserves_existing_godharness_yaml_content() {
 
 #[test]
 fn enabling_an_unknown_tool_returns_an_error() {
-    let root = TempRoot::new("unknown-tool");
+    let root = temp_root("unknown-tool");
 
     let result = enable_adapter(&root.path, "not-a-real-tool");
 
     assert!(result.is_err());
+}
+
+#[test]
+fn enabling_claude_code_installs_all_four_recommended_skills() {
+    let root = temp_root("skills-claude-code");
+
+    let report = enable_adapter(&root.path, "claude-code").expect("enable adapter");
+
+    assert_eq!(report.skills_installed.len(), 4);
+    assert!(
+        root.path
+            .join(".claude/skills/atomic-commits/SKILL.md")
+            .exists()
+    );
+    let content = std::fs::read_to_string(root.path.join(".claude/skills/atomic-commits/SKILL.md"))
+        .expect("read installed skill");
+    assert!(content.contains("name: atomic-commits"));
+}
+
+#[test]
+fn enabling_codex_installs_skills_under_dot_agents_skills() {
+    let root = temp_root("skills-codex");
+
+    let report = enable_adapter(&root.path, "codex").expect("enable adapter");
+
+    assert_eq!(report.skills_installed.len(), 4);
+    assert!(
+        root.path
+            .join(".agents/skills/property-based-testing/SKILL.md")
+            .exists()
+    );
+}
+
+#[test]
+fn enabling_twice_does_not_rewrite_unchanged_skills() {
+    let root = temp_root("skills-idempotent");
+
+    enable_adapter(&root.path, "claude-code").expect("first enable");
+    let second = enable_adapter(&root.path, "claude-code").expect("second enable");
+
+    assert!(second.skills_installed.is_empty());
+}
+
+#[test]
+fn enabling_does_not_touch_a_skill_directory_it_did_not_create() {
+    let root = temp_root("skills-preserve-foreign");
+    std::fs::create_dir_all(root.path.join(".claude/skills/my-own-skill")).expect("create dir");
+    std::fs::write(
+        root.path.join(".claude/skills/my-own-skill/SKILL.md"),
+        "---\nname: my-own-skill\ndescription: not godharness's.\n---\n\nMine.\n",
+    )
+    .expect("write foreign skill");
+
+    enable_adapter(&root.path, "claude-code").expect("enable adapter");
+
+    let content = std::fs::read_to_string(root.path.join(".claude/skills/my-own-skill/SKILL.md"))
+        .expect("foreign skill should be untouched");
+    assert!(content.contains("Mine."));
 }

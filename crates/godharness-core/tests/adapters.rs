@@ -1,6 +1,9 @@
 use std::path::Path;
 
-use godharness_core::{FieldMapping, Standard, render_shape_a, write_rendered_files};
+use godharness_core::{FieldMapping, render_shape_a, write_rendered_files};
+
+mod common;
+use common::{TempRoot, standard};
 
 const TEST_MAPPING: FieldMapping = FieldMapping {
     scope_key: "globs",
@@ -8,22 +11,6 @@ const TEST_MAPPING: FieldMapping = FieldMapping {
     directory: ".rules",
     extension: "md",
 };
-
-fn standard(id: &str, keywords: &[&str], paths: &[&str], must_read: bool) -> Standard {
-    Standard {
-        id: id.to_string(),
-        title: id.to_string(),
-        keywords: keywords.iter().map(|s| s.to_string()).collect(),
-        paths: paths.iter().map(|s| s.to_string()).collect(),
-        must_read,
-        supersedes: Vec::new(),
-        relates_to: Vec::new(),
-        rule: format!("Rule for {id}."),
-        why: None,
-        how_to_apply: None,
-        source_path: Path::new(&format!("{id}.md")).to_path_buf(),
-    }
-}
 
 #[test]
 fn path_scoped_standard_renders_with_globs_key() {
@@ -111,32 +98,9 @@ fn a_glob_with_quotes_still_produces_valid_frontmatter() {
     assert_eq!(data["globs"][0].as_str(), Some("**/\"weird\"/**"));
 }
 
-struct TempRoot {
-    path: std::path::PathBuf,
-}
-
-impl TempRoot {
-    #[allow(clippy::expect_used)]
-    fn new(name: &str) -> Self {
-        let path = std::env::temp_dir().join(format!(
-            "godharness-adapters-test-{name}-{}",
-            std::process::id()
-        ));
-        let _ = std::fs::remove_dir_all(&path);
-        std::fs::create_dir_all(&path).expect("create temp root");
-        Self { path }
-    }
-}
-
-impl Drop for TempRoot {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.path);
-    }
-}
-
 #[test]
 fn write_rendered_files_creates_the_directory_and_file() {
-    let root = TempRoot::new("write");
+    let root = TempRoot::new("godharness-adapters-test", "write");
     let standards = vec![standard("rust-only", &[], &["**/*.rs"], false)];
     let rendered = render_shape_a(&standards, &TEST_MAPPING).expect("render should succeed");
 
@@ -149,7 +113,7 @@ fn write_rendered_files_creates_the_directory_and_file() {
 
 #[test]
 fn write_rendered_files_regenerates_existing_content() {
-    let root = TempRoot::new("regenerate");
+    let root = TempRoot::new("godharness-adapters-test", "regenerate");
     std::fs::create_dir_all(root.path.join(".rules")).expect("create rules dir");
     std::fs::write(root.path.join(".rules/rust-only.md"), "stale content")
         .expect("write stale content");

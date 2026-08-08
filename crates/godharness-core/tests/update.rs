@@ -78,3 +78,19 @@ fn a_disabled_adapter_is_not_resynced() {
 
     cleanup(&root);
 }
+
+#[test]
+fn update_installs_skills_for_an_enabled_adapter() {
+    let root = temp_repo("update-installs-skills");
+    std::fs::write(
+        root.join("godharness.yaml"),
+        "version: 1\nsuites: [recommended@1]\nadapters:\n  claude-code: true\n",
+    )
+    .expect("write config");
+
+    update_repository(&root).expect("update");
+
+    assert!(root.join(".claude/skills/atomic-commits/SKILL.md").exists());
+
+    cleanup(&root);
+}

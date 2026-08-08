@@ -1,15 +1,11 @@
-# Skill reference docs
+# Skills
 
-These are procedural playbooks, not godharness standards — they describe *how* to do something
-step by step, rather than a passive principle an agent should just know. godharness itself has
-no distribution mechanism for this yet (it's a context/standards tool, not a skills tool).
+The 4 skills godharness installs as part of `recommended@1` are real, spec-compliant
+`SKILL.md` files under `crates/godharness-core/skills/` — that directory is the source of
+truth, not this one. `godharness adapters enable`/`update` write them into whichever tool a
+repo has enabled (`.claude/skills/` for Claude Code, `.agents/skills/` for Codex).
 
-Written here as reference material for now. The roadmap (`docs/superpowers/specs/2026-08-05-
-product-vision-roadmap.md`) tracks the open question of whether/how godharness's adapters
-should install these alongside standards when a tool is enabled or updated — that needs its own
-design pass before any distribution mechanism gets built.
-
-- [isolate-refactoring-from-behavior-change.md](isolate-refactoring-from-behavior-change.md)
-- [property-based-testing.md](property-based-testing.md)
-- [atomic-commits.md](atomic-commits.md)
-- [resource-oriented-api-design.md](resource-oriented-api-design.md)
+- [isolate-refactoring-from-behavior-change](../../crates/godharness-core/skills/isolate-refactoring-from-behavior-change/SKILL.md)
+- [property-based-testing](../../crates/godharness-core/skills/property-based-testing/SKILL.md)
+- [atomic-commits](../../crates/godharness-core/skills/atomic-commits/SKILL.md)
+- [resource-oriented-api-design](../../crates/godharness-core/skills/resource-oriented-api-design/SKILL.md)

@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 
+use crate::error::string_error;
 use crate::standard::Standard;
 
 pub struct FieldMapping {
@@ -15,28 +16,7 @@ pub struct RenderedFile {
     pub content: String,
 }
 
-#[derive(Debug)]
-pub struct AdapterError(String);
-
-impl std::fmt::Display for AdapterError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{}", self.0)
-    }
-}
-
-impl std::error::Error for AdapterError {}
-
-impl From<std::io::Error> for AdapterError {
-    fn from(error: std::io::Error) -> Self {
-        AdapterError(error.to_string())
-    }
-}
-
-impl From<serde_yaml::Error> for AdapterError {
-    fn from(error: serde_yaml::Error) -> Self {
-        AdapterError(error.to_string())
-    }
-}
+string_error!(AdapterError, "", from: std::io::Error, serde_yaml::Error);
 
 fn scope_for(standard: &Standard, mapping: &FieldMapping) -> Option<Vec<String>> {
     if standard.must_read {

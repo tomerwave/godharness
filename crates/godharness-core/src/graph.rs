@@ -6,6 +6,7 @@ use petgraph::Direction;
 use petgraph::graph::{DiGraph, NodeIndex};
 use petgraph::visit::{EdgeFiltered, EdgeRef};
 
+use crate::error::string_error;
 use crate::standard::Standard;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -23,16 +24,7 @@ impl EdgeKind {
     }
 }
 
-#[derive(Debug)]
-pub struct GraphError(String);
-
-impl std::fmt::Display for GraphError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "invalid standard graph: {}", self.0)
-    }
-}
-
-impl std::error::Error for GraphError {}
+string_error!(GraphError, "invalid standard graph: ");
 
 pub struct StandardGraph {
     graph: DiGraph<Standard, EdgeKind>,

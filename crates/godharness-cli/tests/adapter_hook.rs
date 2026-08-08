@@ -1,9 +1,8 @@
 use std::io::Write;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
-fn godharness() -> Command {
-    Command::new(env!("CARGO_BIN_EXE_godharness"))
-}
+mod common;
+use common::{TempRepo, godharness};
 
 #[allow(clippy::expect_used)]
 fn run_adapter_hook_for(
@@ -134,37 +133,20 @@ fn codex_session_start_prints_must_read_standards_as_real_hook_json() {
     assert_hook_response_contains(&stdout, "SessionStart", "secrets-and-security");
 }
 
-struct TempRepo {
-    path: std::path::PathBuf,
-}
-
-impl TempRepo {
-    #[allow(clippy::expect_used)]
-    fn new(name: &str) -> Self {
-        let path = std::env::temp_dir().join(format!(
-            "godharness-cli-test-repo-{name}-{}",
-            std::process::id()
-        ));
-        let _ = std::fs::remove_dir_all(&path);
-        std::fs::create_dir_all(&path).expect("create temp repo root");
-        std::fs::write(
-            path.join("godharness.yaml"),
-            "version: 1\nsuites: [recommended@1]\nreinject-after-prompts: 3\n",
-        )
-        .expect("write godharness.yaml");
-        Self { path }
-    }
-}
-
-impl Drop for TempRepo {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.path);
-    }
+#[allow(clippy::expect_used)]
+fn temp_repo_with_debounce_config(name: &str) -> TempRepo {
+    let repo = TempRepo::new("godharness-cli-test-repo", name);
+    std::fs::write(
+        repo.path.join("godharness.yaml"),
+        "version: 1\nsuites: [recommended@1]\nreinject-after-prompts: 3\n",
+    )
+    .expect("write godharness.yaml");
+    repo
 }
 
 #[test]
 fn session_state_persists_across_separate_process_invocations() {
-    let repo = TempRepo::new("debounce");
+    let repo = temp_repo_with_debounce_config("debounce");
     let session = SessionState::new("persist");
     let stdin_json = format!(
         r#"{{"prompt":"add a credential to config","session_id":"{}"}}"#,

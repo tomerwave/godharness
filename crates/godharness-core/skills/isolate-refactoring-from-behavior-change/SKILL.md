@@ -1,3 +1,8 @@
+---
+name: isolate-refactoring-from-behavior-change
+description: Never mix structural refactoring and behavior changes in the same commit or step.
+---
+
 # Isolate Refactoring From Behavior Change
 
 Source: Martin Fowler, *Refactoring* (2nd ed.), "Two Hats" (Preface / Ch. 2).

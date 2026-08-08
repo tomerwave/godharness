@@ -1,32 +1,13 @@
 use std::path::Path;
 
+use crate::Config;
 use crate::adapters::{InstallError, enable_adapter};
-use crate::check::{CheckError, load_config};
+use crate::check::{CheckError, enabled_adapter_names, load_config};
+use crate::error::string_error;
 
 const KNOWN_SUITES: &[&str] = &["recommended@1"];
 
-#[derive(Debug)]
-pub struct UpdateError(String);
-
-impl std::fmt::Display for UpdateError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{}", self.0)
-    }
-}
-
-impl std::error::Error for UpdateError {}
-
-impl From<CheckError> for UpdateError {
-    fn from(error: CheckError) -> Self {
-        UpdateError(error.to_string())
-    }
-}
-
-impl From<InstallError> for UpdateError {
-    fn from(error: InstallError) -> Self {
-        UpdateError(error.to_string())
-    }
-}
+string_error!(UpdateError, "", from: CheckError, InstallError);
 
 #[derive(Debug, Default, PartialEq)]
 pub struct UpdateReport {
@@ -57,22 +38,10 @@ fn updated_suite(pinned: &str) -> Option<String> {
     }
 }
 
-fn enabled_adapter_names(root: &Path) -> Result<Vec<String>, UpdateError> {
-    let config = load_config(root)?;
-    let mut names: Vec<String> = config
-        .adapters
-        .iter()
-        .filter(|(_, enabled)| **enabled)
-        .map(|(name, _)| name.clone())
-        .collect();
-    names.sort_unstable();
-    Ok(names)
-}
-
-fn resync_adapters(root: &Path) -> Result<Vec<String>, UpdateError> {
+fn resync_adapters(root: &Path, config: &Config) -> Result<Vec<String>, UpdateError> {
     let mut resynced = Vec::new();
 
-    for name in enabled_adapter_names(root)? {
+    for name in enabled_adapter_names(config) {
         enable_adapter(root, &name)?;
         resynced.push(name);
     }
@@ -80,13 +49,12 @@ fn resync_adapters(root: &Path) -> Result<Vec<String>, UpdateError> {
     Ok(resynced)
 }
 
-fn updated_suites(root: &Path) -> Result<Vec<String>, UpdateError> {
-    let config = load_config(root)?;
-    Ok(config
+fn updated_suites(config: &Config) -> Vec<String> {
+    config
         .suites
         .iter()
         .filter_map(|suite| updated_suite(suite))
-        .collect())
+        .collect()
 }
 
 pub fn update_repository(root: &Path) -> Result<UpdateReport, UpdateError> {
@@ -94,8 +62,10 @@ pub fn update_repository(root: &Path) -> Result<UpdateReport, UpdateError> {
         return Ok(UpdateReport::default());
     }
 
+    let config = load_config(root)?;
+
     Ok(UpdateReport {
-        suites_updated: updated_suites(root)?,
-        adapters_resynced: resync_adapters(root)?,
+        suites_updated: updated_suites(&config),
+        adapters_resynced: resync_adapters(root, &config)?,
     })
 }

@@ -1,9 +1,9 @@
 # Adapter architecture
 
-Status: partially implemented. The Claude Code and Codex hook adapters are built, tested, and
-merged; everything else below is still proposed. Nothing in this document is a decision until
-code and tests back it; treat it the way AGENTS.md says to treat anything else written down
-here.
+Status: partially implemented. The Claude Code and Codex hook adapters, and their skill
+installation (`.claude/skills/`, `.agents/skills/`), are built, tested, and merged; everything
+else below is still proposed. Nothing in this document is a decision until code and tests back
+it; treat it the way AGENTS.md says to treat anything else written down here.
 
 ## Goal and scope
 
@@ -156,6 +156,13 @@ Distribution: Claude Code plugins can bundle `hooks/hooks.json` and be installed
 marketplace mechanism, which is worth using once demand exists, rather than requiring users
 to hand-edit `.claude/settings.json`.
 
+**Skills, built 2026-08-08.** `godharness adapters enable claude-code`/`update` write a suite's
+skills as real `SKILL.md` files under `.claude/skills/<id>/SKILL.md` — Claude Code's own native
+skill format and directory, discovered by its live directory watch (no restart needed).
+Verified with a real `claude -p` session explicitly confirming all 4 shipped skills
+(isolate-refactoring-from-behavior-change, property-based-testing, atomic-commits,
+resource-oriented-api-design) were visible and loadable.
+
 #### Codex
 
 **Built and merged — reuses the Claude Code adapter's code verbatim, no new logic.**
@@ -195,6 +202,17 @@ avoided the exact configuration shape the bug report names.
 Codex also reads `AGENTS.md` natively (confirmed — it's one of 28+ tools on the now-Linux-
 Foundation-stewarded AGENTS.md convention, which this repository already follows), giving any
 repo installing godharness a zero-risk baseline even before the hook adapter is configured.
+
+**Skills, built 2026-08-08.** Codex adopted the same open `SKILL.md` format
+([agentskills.io](https://agentskills.io)) as Claude Code, explicitly deprecating its older
+`.codex/prompts/*.md` custom-prompts mechanism in favor of it — but scans a different
+directory, `.agents/skills/<id>/SKILL.md`, discovered at session startup. `godharness adapters
+enable codex`/`update` write to that path. Verified with a real `codex exec
+--dangerously-bypass-hook-trust` session explicitly confirming all 4 shipped skills were
+visible. This resolves the design doc's flagged risk for the case tested — a fresh session
+after install — but Codex's *mid-session* live-reload behavior for skills remains undocumented
+and unverified, since a fresh `codex exec` process necessarily rescans at its own startup
+regardless.
 
 #### Gemini CLI
 

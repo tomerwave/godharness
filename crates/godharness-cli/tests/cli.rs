@@ -1,8 +1,5 @@
-use std::process::Command;
-
-fn godharness() -> Command {
-    Command::new(env!("CARGO_BIN_EXE_godharness"))
-}
+mod common;
+use common::godharness;
 
 #[test]
 fn init_exits_successfully() {
@@ -68,7 +65,7 @@ fn context_prints_the_must_read_standards_as_json() {
     assert_eq!(secrets_and_security["id"], "secrets-and-security");
     assert_eq!(
         secrets_and_security["path"],
-        "suites/recommended/v1/secrets-and-security.md"
+        "standards/secrets-and-security.md"
     );
     assert!(
         secrets_and_security["rule"]

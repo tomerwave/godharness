@@ -1,30 +1,10 @@
 use std::process::Stdio;
 
-fn godharness() -> std::process::Command {
-    std::process::Command::new(env!("CARGO_BIN_EXE_godharness"))
-}
+mod common;
+use common::{TempRepo, godharness};
 
-struct TempRepo {
-    path: std::path::PathBuf,
-}
-
-impl TempRepo {
-    #[allow(clippy::expect_used)]
-    fn new(name: &str) -> Self {
-        let path = std::env::temp_dir().join(format!(
-            "godharness-cli-test-update-{name}-{}",
-            std::process::id()
-        ));
-        let _ = std::fs::remove_dir_all(&path);
-        std::fs::create_dir_all(&path).expect("create temp repo root");
-        Self { path }
-    }
-}
-
-impl Drop for TempRepo {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.path);
-    }
+fn temp_repo(name: &str) -> TempRepo {
+    TempRepo::new("godharness-cli-test-update", name)
 }
 
 #[allow(clippy::expect_used)]
@@ -41,7 +21,7 @@ fn run_update(cwd: &std::path::Path) -> std::process::Output {
 
 #[test]
 fn update_resyncs_an_enabled_adapter_via_the_real_binary() {
-    let repo = TempRepo::new("resync");
+    let repo = temp_repo("resync");
     std::fs::write(
         repo.path.join("godharness.yaml"),
         "version: 1\nsuites: [recommended@1]\nadapters:\n  codex: true\n",

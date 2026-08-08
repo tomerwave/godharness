@@ -1,3 +1,8 @@
+---
+name: resource-oriented-api-design
+description: How to shape an HTTP or RPC endpoint around a resource noun and the standard verb set, instead of custom action methods.
+---
+
 # Resource-Oriented API Design
 
 Source: Google AIP-121, ["Resource-oriented design"](https://google.aip.dev/121); [Google Cloud

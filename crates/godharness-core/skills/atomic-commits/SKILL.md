@@ -1,3 +1,8 @@
+---
+name: atomic-commits
+description: How to split a diff into single-purpose, independently revertable commits.
+---
+
 # Atomic Commits
 
 Source: [Conventional Commits](https://www.conventionalcommits.org/); git hygiene practice

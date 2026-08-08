@@ -2,51 +2,26 @@ use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value, json};
 
-#[derive(Debug)]
-pub struct InstallError(String);
+use crate::error::string_error;
 
-impl std::fmt::Display for InstallError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{}", self.0)
-    }
-}
-
-impl std::error::Error for InstallError {}
-
-impl From<std::io::Error> for InstallError {
-    fn from(error: std::io::Error) -> Self {
-        InstallError(error.to_string())
-    }
-}
-
-impl From<serde_json::Error> for InstallError {
-    fn from(error: serde_json::Error) -> Self {
-        InstallError(error.to_string())
-    }
-}
-
-impl From<serde_yaml::Error> for InstallError {
-    fn from(error: serde_yaml::Error) -> Self {
-        InstallError(error.to_string())
-    }
-}
-
-impl From<crate::init::InitError> for InstallError {
-    fn from(error: crate::init::InitError) -> Self {
-        InstallError(error.to_string())
-    }
-}
+string_error!(
+    InstallError,
+    "",
+    from: std::io::Error, serde_json::Error, serde_yaml::Error, crate::init::InitError, crate::check::CheckError,
+);
 
 #[derive(Debug, PartialEq)]
 pub struct InstallReport {
     pub godharness_yaml_updated: bool,
     pub hook_config_updated: bool,
     pub hook_config_path: PathBuf,
+    pub skills_installed: Vec<String>,
 }
 
 struct ToolProfile {
     yaml_key: &'static str,
     hook_config_relative_path: &'static str,
+    skills_relative_path: &'static str,
 }
 
 fn tool_profile(tool_arg: &str) -> Result<ToolProfile, InstallError> {
@@ -54,10 +29,12 @@ fn tool_profile(tool_arg: &str) -> Result<ToolProfile, InstallError> {
         "claude-code" => Ok(ToolProfile {
             yaml_key: "claude-code",
             hook_config_relative_path: ".claude/settings.json",
+            skills_relative_path: ".claude/skills",
         }),
         "codex" => Ok(ToolProfile {
             yaml_key: "codex",
             hook_config_relative_path: ".codex/hooks.json",
+            skills_relative_path: ".agents/skills",
         }),
         other => Err(InstallError(format!("unknown adapter tool: {other}"))),
     }
@@ -199,15 +176,72 @@ fn merge_yaml_adapter(root: &Path, yaml_key: &str) -> Result<bool, InstallError>
     Ok(updated)
 }
 
+fn skill_document(skill: &crate::skill::Skill) -> String {
+    format!(
+        "---\nname: {}\ndescription: {}\n---\n\n{}\n",
+        skill.name, skill.description, skill.body
+    )
+}
+
+fn write_skill_if_changed(path: &Path, skill: &crate::skill::Skill) -> Result<bool, InstallError> {
+    let rendered = skill_document(skill);
+    if std::fs::read_to_string(path).ok().as_deref() == Some(rendered.as_str()) {
+        return Ok(false);
+    }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(path, rendered)?;
+    Ok(true)
+}
+
+fn install_skills(root: &Path, skills_relative_path: &str) -> Result<Vec<String>, InstallError> {
+    let config = crate::check::load_config(root)?;
+    let mut installed = Vec::new();
+
+    for skill in crate::check::load_suite_skills(&config) {
+        let path = root
+            .join(skills_relative_path)
+            .join(&skill.id)
+            .join("SKILL.md");
+        if write_skill_if_changed(&path, &skill)? {
+            installed.push(skill.id.clone());
+        }
+    }
+
+    Ok(installed)
+}
+
+struct AdapterInstallation {
+    hook_config_updated: bool,
+    hook_config_path: PathBuf,
+    skills_installed: Vec<String>,
+}
+
+fn install_hook_and_skills(
+    root: &Path,
+    tool_arg: &str,
+    profile: &ToolProfile,
+) -> Result<AdapterInstallation, InstallError> {
+    let hook_config_path = root.join(profile.hook_config_relative_path);
+    let hook_config_updated = merge_hook_config(&hook_config_path, tool_arg)?;
+    let skills_installed = install_skills(root, profile.skills_relative_path)?;
+    Ok(AdapterInstallation {
+        hook_config_updated,
+        hook_config_path,
+        skills_installed,
+    })
+}
+
 pub fn enable_adapter(root: &Path, tool_arg: &str) -> Result<InstallReport, InstallError> {
     let profile = tool_profile(tool_arg)?;
     crate::init::run_init(root)?;
     let godharness_yaml_updated = merge_yaml_adapter(root, profile.yaml_key)?;
-    let hook_config_path = root.join(profile.hook_config_relative_path);
-    let hook_config_updated = merge_hook_config(&hook_config_path, tool_arg)?;
+    let installation = install_hook_and_skills(root, tool_arg, &profile)?;
     Ok(InstallReport {
         godharness_yaml_updated,
-        hook_config_updated,
-        hook_config_path,
+        hook_config_updated: installation.hook_config_updated,
+        hook_config_path: installation.hook_config_path,
+        skills_installed: installation.skills_installed,
     })
 }
