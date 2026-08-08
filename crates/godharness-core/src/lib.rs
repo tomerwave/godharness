@@ -20,7 +20,9 @@ pub use adapters::{
     RenderedFile, SessionState, claude_code_hook_response, enable_adapter, render_shape_a,
     write_rendered_files,
 };
-pub use check::{CheckError, CheckReport, load_config, load_repository_graph, run_check};
+pub use check::{
+    CheckError, CheckReport, load_config, load_repository_graph, load_suite_skills, run_check,
+};
 pub use doctor::{DoctorReport, run_doctor};
 pub use graph::{EdgeKind, GraphError, StandardGraph, build_graph, content_hash};
 pub use init::{InitError, InitReport, run_init};

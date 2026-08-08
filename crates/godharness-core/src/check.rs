@@ -1,8 +1,9 @@
 use std::path::Path;
 
 use crate::graph::{GraphError, StandardGraph, build_graph};
+use crate::skill::Skill;
 use crate::standard::{Standard, StandardError, parse_standard};
-use crate::suite::recommended_v1;
+use crate::suite::{recommended_v1, recommended_v1_skills};
 use crate::{Config, ConfigError, parse_config};
 
 const DEFAULT_STANDARDS_GLOB: &str = "docs/godharness/**/*.md";
@@ -86,6 +87,17 @@ fn load_suite_standards(config: &Config) -> Result<Vec<Standard>, CheckError> {
         }
     }
     Ok(standards)
+}
+
+pub fn load_suite_skills(config: &Config) -> Vec<Skill> {
+    config
+        .suites
+        .iter()
+        .flat_map(|suite| match suite.as_str() {
+            "recommended@1" => recommended_v1_skills(),
+            _ => Vec::new(),
+        })
+        .collect()
 }
 
 fn standards_globs(config: &Config) -> Vec<String> {

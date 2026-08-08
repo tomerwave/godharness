@@ -1,6 +1,7 @@
+use std::collections::BTreeMap;
 use std::fs;
 
-use godharness_core::run_check;
+use godharness_core::{Config, load_suite_skills, run_check};
 
 struct TempRoot {
     path: std::path::PathBuf,
@@ -74,4 +75,34 @@ fn check_fails_on_an_unknown_suite() {
     let result = run_check(&root.path);
 
     assert!(result.is_err());
+}
+
+#[test]
+fn load_suite_skills_resolves_recommended_v1() {
+    let config = Config {
+        version: 1,
+        suites: vec!["recommended@1".to_string()],
+        standards: vec![],
+        adapters: BTreeMap::new(),
+        reinject_after_prompts: 0,
+    };
+
+    let skills = load_suite_skills(&config);
+
+    assert_eq!(skills.len(), 4);
+}
+
+#[test]
+fn load_suite_skills_is_empty_with_no_suites() {
+    let config = Config {
+        version: 1,
+        suites: vec![],
+        standards: vec![],
+        adapters: BTreeMap::new(),
+        reinject_after_prompts: 0,
+    };
+
+    let skills = load_suite_skills(&config);
+
+    assert!(skills.is_empty());
 }
