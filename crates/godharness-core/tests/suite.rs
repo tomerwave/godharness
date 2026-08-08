@@ -1,6 +1,6 @@
 use godharness_core::{build_graph, recommended_v1, recommended_v1_skills};
 
-const RECOMMENDED_V1_STANDARD_COUNT: usize = 29;
+const RECOMMENDED_V1_STANDARD_COUNT: usize = 31;
 
 #[test]
 fn recommended_v1_ids_are_unchanged_by_the_registry_refactor() {
@@ -16,6 +16,7 @@ fn recommended_v1_ids_are_unchanged_by_the_registry_refactor() {
         vec![
             "architecture-decisions",
             "automate-everything",
+            "concise-communication",
             "configuration-boundaries",
             "dependency-direction",
             "design-for-extension",
@@ -24,6 +25,7 @@ fn recommended_v1_ids_are_unchanged_by_the_registry_refactor() {
             "flaky-test-is-signal",
             "injection-parameterize",
             "interface-segregation",
+            "leave-code-cleaner-than-you-found-it",
             "liskov-substitutability",
             "naming",
             "no-broken-windows",
@@ -100,11 +102,11 @@ fn must_read_standards_are_secrets_simplify_and_verify() {
 fn recommended_v1_skills_all_parse_with_unique_ids() {
     let skills = recommended_v1_skills();
 
-    assert_eq!(skills.len(), 4);
+    assert_eq!(skills.len(), 13);
     let mut ids: Vec<&str> = skills.iter().map(|skill| skill.id.as_str()).collect();
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), 4);
+    assert_eq!(ids.len(), 13);
 }
 
 #[test]
