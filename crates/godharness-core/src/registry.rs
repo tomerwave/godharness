@@ -248,6 +248,16 @@ const SKILLS: &[(&str, &str, &str)] = &[
         "skills/retrospective-workflow-review/SKILL.md",
         include_str!("../skills/retrospective-workflow-review/SKILL.md"),
     ),
+    (
+        "clarify-before-building",
+        "skills/clarify-before-building/SKILL.md",
+        include_str!("../skills/clarify-before-building/SKILL.md"),
+    ),
+    (
+        "doubt-driven-development",
+        "skills/doubt-driven-development/SKILL.md",
+        include_str!("../skills/doubt-driven-development/SKILL.md"),
+    ),
 ];
 
 static PARSED_SKILLS: LazyLock<HashMap<&'static str, Skill>> = LazyLock::new(|| {

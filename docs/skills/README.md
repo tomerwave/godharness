@@ -1,6 +1,6 @@
 # Skills
 
-The 13 skills godharness installs as part of `recommended@1` are real, spec-compliant
+The 15 skills godharness installs as part of `recommended@1` are real, spec-compliant
 `SKILL.md` files under `crates/godharness-core/skills/` — that directory is the source of
 truth, not this one. `godharness adapters enable`/`update` write them into whichever tool a
 repo has enabled (`.claude/skills/` for Claude Code, `.agents/skills/` for Codex).
@@ -18,3 +18,5 @@ repo has enabled (`.claude/skills/` for Claude Code, `.agents/skills/` for Codex
 - [research-with-evidence](../../crates/godharness-core/skills/research-with-evidence/SKILL.md)
 - [frontend-design](../../crates/godharness-core/skills/frontend-design/SKILL.md)
 - [retrospective-workflow-review](../../crates/godharness-core/skills/retrospective-workflow-review/SKILL.md)
+- [clarify-before-building](../../crates/godharness-core/skills/clarify-before-building/SKILL.md)
+- [doubt-driven-development](../../crates/godharness-core/skills/doubt-driven-development/SKILL.md)
