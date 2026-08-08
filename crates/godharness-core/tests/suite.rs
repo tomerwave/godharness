@@ -1,6 +1,6 @@
 use godharness_core::{build_graph, recommended_v1};
 
-const RECOMMENDED_V1_STANDARD_COUNT: usize = 13;
+const RECOMMENDED_V1_STANDARD_COUNT: usize = 26;
 
 #[test]
 fn every_embedded_document_parses() {
