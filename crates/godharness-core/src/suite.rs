@@ -55,6 +55,8 @@ pub const RECOMMENDED_V1: SuiteManifest = SuiteManifest {
         "research-with-evidence",
         "frontend-design",
         "retrospective-workflow-review",
+        "clarify-before-building",
+        "doubt-driven-development",
     ],
 };
 
