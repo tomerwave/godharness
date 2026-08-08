@@ -1,8 +1,5 @@
-use std::process::Command;
-
-fn godharness() -> Command {
-    Command::new(env!("CARGO_BIN_EXE_godharness"))
-}
+mod common;
+use common::godharness;
 
 #[test]
 fn init_exits_successfully() {

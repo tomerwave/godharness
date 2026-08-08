@@ -1,23 +1,11 @@
-use std::path::Path;
-
 use godharness_core::{
     ClaudeCodeEvent, HookRequest, SessionState, Standard, build_graph, claude_code_hook_response,
 };
 
+mod common;
+
 fn standard(id: &str, keywords: &[&str], must_read: bool) -> Standard {
-    Standard {
-        id: id.to_string(),
-        title: id.to_string(),
-        keywords: keywords.iter().map(|s| s.to_string()).collect(),
-        paths: Vec::new(),
-        must_read,
-        supersedes: Vec::new(),
-        relates_to: Vec::new(),
-        rule: format!("Rule for {id}."),
-        why: None,
-        how_to_apply: None,
-        source_path: Path::new(&format!("{id}.md")).to_path_buf(),
-    }
+    common::standard(id, keywords, &[], must_read)
 }
 
 fn request(

@@ -1,22 +1,7 @@
-use std::path::Path;
+use godharness_core::{build_graph, resolve, resolve_by_keyword_only};
 
-use godharness_core::{Standard, build_graph, resolve, resolve_by_keyword_only};
-
-fn standard(id: &str, keywords: &[&str], paths: &[&str], must_read: bool) -> Standard {
-    Standard {
-        id: id.to_string(),
-        title: id.to_string(),
-        keywords: keywords.iter().map(|s| s.to_string()).collect(),
-        paths: paths.iter().map(|s| s.to_string()).collect(),
-        must_read,
-        supersedes: Vec::new(),
-        relates_to: Vec::new(),
-        rule: format!("Rule for {id}."),
-        why: None,
-        how_to_apply: None,
-        source_path: Path::new(&format!("{id}.md")).to_path_buf(),
-    }
-}
+mod common;
+use common::standard;
 
 #[test]
 fn resolved_entry_carries_the_full_json_contract() {

@@ -1,20 +1,12 @@
-use std::path::Path;
-
 use godharness_core::{Standard, build_graph, content_hash};
+
+mod common;
 
 fn standard(id: &str, supersedes: &[&str], relates_to: &[&str]) -> Standard {
     Standard {
-        id: id.to_string(),
-        title: id.to_string(),
-        keywords: Vec::new(),
-        paths: Vec::new(),
-        must_read: false,
         supersedes: supersedes.iter().map(|s| s.to_string()).collect(),
         relates_to: relates_to.iter().map(|s| s.to_string()).collect(),
-        rule: "Do it.".to_string(),
-        why: None,
-        how_to_apply: None,
-        source_path: Path::new("x.md").to_path_buf(),
+        ..common::standard(id, &[], &[], false)
     }
 }
 
