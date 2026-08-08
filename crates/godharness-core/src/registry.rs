@@ -151,6 +151,21 @@ const STANDARDS: &[(&str, &str, &str)] = &[
         "standards/small-reviewable-changes.md",
         include_str!("../standards/small-reviewable-changes.md"),
     ),
+    (
+        "leave-code-cleaner-than-you-found-it",
+        "standards/leave-code-cleaner-than-you-found-it.md",
+        include_str!("../standards/leave-code-cleaner-than-you-found-it.md"),
+    ),
+    (
+        "concise-communication",
+        "standards/concise-communication.md",
+        include_str!("../standards/concise-communication.md"),
+    ),
+    (
+        "context-compression-evaluation",
+        "standards/context-compression-evaluation.md",
+        include_str!("../standards/context-compression-evaluation.md"),
+    ),
 ];
 
 static PARSED_STANDARDS: LazyLock<HashMap<&'static str, Result<Standard, StandardError>>> =
@@ -192,6 +207,51 @@ const SKILLS: &[(&str, &str, &str)] = &[
         "resource-oriented-api-design",
         "skills/resource-oriented-api-design/SKILL.md",
         include_str!("../skills/resource-oriented-api-design/SKILL.md"),
+    ),
+    (
+        "systematic-debugging",
+        "skills/systematic-debugging/SKILL.md",
+        include_str!("../skills/systematic-debugging/SKILL.md"),
+    ),
+    (
+        "verification-before-completion",
+        "skills/verification-before-completion/SKILL.md",
+        include_str!("../skills/verification-before-completion/SKILL.md"),
+    ),
+    (
+        "requesting-code-review",
+        "skills/requesting-code-review/SKILL.md",
+        include_str!("../skills/requesting-code-review/SKILL.md"),
+    ),
+    (
+        "receiving-code-review",
+        "skills/receiving-code-review/SKILL.md",
+        include_str!("../skills/receiving-code-review/SKILL.md"),
+    ),
+    (
+        "simplify",
+        "skills/simplify/SKILL.md",
+        include_str!("../skills/simplify/SKILL.md"),
+    ),
+    (
+        "ai-slop-cleaner",
+        "skills/ai-slop-cleaner/SKILL.md",
+        include_str!("../skills/ai-slop-cleaner/SKILL.md"),
+    ),
+    (
+        "research-with-evidence",
+        "skills/research-with-evidence/SKILL.md",
+        include_str!("../skills/research-with-evidence/SKILL.md"),
+    ),
+    (
+        "frontend-design",
+        "skills/frontend-design/SKILL.md",
+        include_str!("../skills/frontend-design/SKILL.md"),
+    ),
+    (
+        "retrospective-workflow-review",
+        "skills/retrospective-workflow-review/SKILL.md",
+        include_str!("../skills/retrospective-workflow-review/SKILL.md"),
     ),
 ];
 
