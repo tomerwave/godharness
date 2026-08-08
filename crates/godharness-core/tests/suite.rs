@@ -1,6 +1,6 @@
 use godharness_core::{build_graph, recommended_v1, recommended_v1_skills};
 
-const RECOMMENDED_V1_STANDARD_COUNT: usize = 32;
+const RECOMMENDED_V1_STANDARD_COUNT: usize = 31;
 
 #[test]
 fn recommended_v1_ids_are_unchanged_by_the_registry_refactor() {
@@ -18,7 +18,6 @@ fn recommended_v1_ids_are_unchanged_by_the_registry_refactor() {
             "automate-everything",
             "concise-communication",
             "configuration-boundaries",
-            "context-compression-evaluation",
             "dependency-direction",
             "design-for-extension",
             "dont-repeat-yourself",

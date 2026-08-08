@@ -15,7 +15,7 @@ fn reports_the_suite_count_with_no_config() {
 
     let report = run_doctor(&root.path).expect("doctor should succeed with no config");
 
-    assert_eq!(report.standard_count, 32);
+    assert_eq!(report.standard_count, 31);
     assert!(report.enabled_adapters.is_empty());
 }
 

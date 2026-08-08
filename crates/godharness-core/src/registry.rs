@@ -161,11 +161,6 @@ const STANDARDS: &[(&str, &str, &str)] = &[
         "standards/concise-communication.md",
         include_str!("../standards/concise-communication.md"),
     ),
-    (
-        "context-compression-evaluation",
-        "standards/context-compression-evaluation.md",
-        include_str!("../standards/context-compression-evaluation.md"),
-    ),
 ];
 
 static PARSED_STANDARDS: LazyLock<HashMap<&'static str, Result<Standard, StandardError>>> =

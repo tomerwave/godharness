@@ -40,7 +40,6 @@ pub const RECOMMENDED_V1: SuiteManifest = SuiteManifest {
         "small-reviewable-changes",
         "leave-code-cleaner-than-you-found-it",
         "concise-communication",
-        "context-compression-evaluation",
     ],
     skills: &[
         "isolate-refactoring-from-behavior-change",

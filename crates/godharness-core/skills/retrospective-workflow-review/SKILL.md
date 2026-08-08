@@ -15,21 +15,27 @@ interaction itself rather than a piece of code.
 
 ## The playbook
 
-1. **Use session or conversation history if the current tool exposes it.** Many agent tools
-   retain transcripts or logs of recent sessions; read what's available before asking the user to
-   reconstruct it from memory.
-2. **If the tool doesn't expose history, ask instead of skipping the review.** Ask the user to
-   describe recent friction, repeated corrections they've had to give, or tasks that took more
-   back-and-forth than they should have. A review built from what the user describes is still
-   useful; silently doing nothing because transcripts aren't available is not.
-3. **Look specifically for patterns, not isolated incidents**: the same correction given more
+1. **Ask what scope to review before doing anything else** — this session only, the last N
+   sessions, a specific date range, or a specific recurring task. Don't default to "everything"
+   or "just this session" silently; both Claude Code and Codex retain session/transcript history
+   locally, so "all of it" is a real, expensive option the user should choose deliberately, not
+   one you pick for them.
+2. **Read the session/transcript history for the chosen scope if the current tool exposes it.**
+   Most agent tools retain logs of recent sessions on disk; read what's available for that scope
+   before asking the user to reconstruct it from memory.
+3. **If the tool doesn't expose history for the chosen scope, ask instead of skipping the
+   review.** Ask the user to describe recent friction, repeated corrections they've had to give,
+   or tasks that took more back-and-forth than they should have. A review built from what the
+   user describes is still useful; silently doing nothing because transcripts aren't available is
+   not.
+4. **Look specifically for patterns, not isolated incidents**: the same correction given more
    than once, a manual step that's been repeated across sessions and could be scripted or
    delegated, a misunderstanding that recurs because of an ambiguous instruction or missing
    context.
-4. **For each pattern found, give a concrete, actionable suggestion** — a specific instruction to
+5. **For each pattern found, give a concrete, actionable suggestion** — a specific instruction to
    add to a project's configuration, a workflow step to automate, a habit to change — not a vague
    observation like "communication could be clearer."
-5. **Write the findings as a report**, always as a file the user can keep and reread, even when
+6. **Write the findings as a report**, always as a file the user can keep and reread, even when
    the environment also supports rendering it inline (for example, as a live artifact) — the file
    is the guaranteed output; an inline render is a bonus, never the only copy.
 
