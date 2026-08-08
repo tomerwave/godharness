@@ -6,6 +6,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before `1.0`, a `0.x` release may
 change the CLI surface or configuration schema.
 
+## [0.1.5] - 2026-08-09
+
+### Added
+
+- `recommended@1` expanded from 4 to 15 skills and from 29 to 31 standards, following a
+  survey of Superpowers, Claude Code/Anthropic's official skills, oh-my-claudecode, and
+  `addyosmani/agent-skills`. New skills: `systematic-debugging`, `verification-before-completion`,
+  `requesting-code-review`, `receiving-code-review`, `simplify`, `ai-slop-cleaner`,
+  `research-with-evidence`, `frontend-design`, `retrospective-workflow-review`,
+  `clarify-before-building`, `doubt-driven-development`. New standards:
+  `leave-code-cleaner-than-you-found-it` (the Boy Scout Rule) and `concise-communication`,
+  both must-read.
+
+### Internal
+
+- Nine hand-written error types collapsed onto a shared `string_error!` macro; registry
+  standard/skill parsing is now cached instead of re-parsing on every call; keyword and path
+  matching cache their compiled regex/glob patterns.
+- Nine duplicated test temp-directory helpers and four duplicated `Standard` test builders
+  consolidated into `tests/common/mod.rs` per crate.
+
 ## [0.1.4] - 2026-08-08
 
 ### Added
