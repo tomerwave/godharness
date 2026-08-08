@@ -27,7 +27,7 @@ pub use init::{InitError, InitReport, run_init};
 pub use resolve::{ResolvedStandard, resolve, resolve_by_keyword_only};
 pub use skill::{Skill, SkillError, parse_skill};
 pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
-pub use suite::recommended_v1;
+pub use suite::{recommended_v1, recommended_v1_skills};
 pub use update::{UpdateError, UpdateReport, update_repository};
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]

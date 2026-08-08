@@ -1,4 +1,4 @@
-use godharness_core::{build_graph, recommended_v1};
+use godharness_core::{build_graph, recommended_v1, recommended_v1_skills};
 
 const RECOMMENDED_V1_STANDARD_COUNT: usize = 29;
 
@@ -94,4 +94,33 @@ fn must_read_standards_are_secrets_simplify_and_verify() {
             "verify-through-real-path",
         ]
     );
+}
+
+#[test]
+fn recommended_v1_skills_all_parse_with_unique_ids() {
+    let skills = recommended_v1_skills();
+
+    assert_eq!(skills.len(), 4);
+    let mut ids: Vec<&str> = skills.iter().map(|skill| skill.id.as_str()).collect();
+    ids.sort_unstable();
+    ids.dedup();
+    assert_eq!(ids.len(), 4);
+}
+
+#[test]
+fn recommended_v1_skills_have_non_empty_name_and_description() {
+    let skills = recommended_v1_skills();
+
+    for skill in &skills {
+        assert!(
+            !skill.name.is_empty(),
+            "skill {} has an empty name",
+            skill.id
+        );
+        assert!(
+            !skill.description.is_empty(),
+            "skill {} has an empty description",
+            skill.id
+        );
+    }
 }

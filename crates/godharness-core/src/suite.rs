@@ -1,8 +1,10 @@
 use crate::registry;
+use crate::skill::Skill;
 use crate::standard::{Standard, StandardError};
 
 pub struct SuiteManifest {
     pub standards: &'static [&'static str],
+    pub skills: &'static [&'static str],
 }
 
 pub const RECOMMENDED_V1: SuiteManifest = SuiteManifest {
@@ -37,6 +39,12 @@ pub const RECOMMENDED_V1: SuiteManifest = SuiteManifest {
         "structured-logging-over-printf",
         "small-reviewable-changes",
     ],
+    skills: &[
+        "isolate-refactoring-from-behavior-change",
+        "property-based-testing",
+        "atomic-commits",
+        "resource-oriented-api-design",
+    ],
 };
 
 pub fn recommended_v1() -> Result<Vec<Standard>, StandardError> {
@@ -44,5 +52,13 @@ pub fn recommended_v1() -> Result<Vec<Standard>, StandardError> {
         .standards
         .iter()
         .map(|id| registry::standard(id))
+        .collect()
+}
+
+pub fn recommended_v1_skills() -> Vec<Skill> {
+    RECOMMENDED_V1
+        .skills
+        .iter()
+        .map(|id| registry::skill(id))
         .collect()
 }

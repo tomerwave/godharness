@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use crate::skill::{Skill, parse_skill};
 use crate::standard::{Standard, StandardError, parse_standard};
 
 const STANDARDS: &[(&str, &str, &str)] = &[
@@ -160,4 +161,38 @@ pub fn standard(id: &str) -> Result<Standard, StandardError> {
             )
         });
     parse_standard(document, Path::new(path))
+}
+
+const SKILLS: &[(&str, &str, &str)] = &[
+    (
+        "isolate-refactoring-from-behavior-change",
+        "skills/isolate-refactoring-from-behavior-change/SKILL.md",
+        include_str!("../skills/isolate-refactoring-from-behavior-change/SKILL.md"),
+    ),
+    (
+        "property-based-testing",
+        "skills/property-based-testing/SKILL.md",
+        include_str!("../skills/property-based-testing/SKILL.md"),
+    ),
+    (
+        "atomic-commits",
+        "skills/atomic-commits/SKILL.md",
+        include_str!("../skills/atomic-commits/SKILL.md"),
+    ),
+    (
+        "resource-oriented-api-design",
+        "skills/resource-oriented-api-design/SKILL.md",
+        include_str!("../skills/resource-oriented-api-design/SKILL.md"),
+    ),
+];
+
+pub fn skill(id: &str) -> Skill {
+    let (_, path, document) = SKILLS
+        .iter()
+        .find(|(entry_id, _, _)| *entry_id == id)
+        .unwrap_or_else(|| {
+            panic!("registry: unknown skill id {id:?} — this is a bug in suite.rs, not user input")
+        });
+    parse_skill(document, id, Path::new(path))
+        .unwrap_or_else(|error| panic!("registry: embedded skill {id:?} failed to parse: {error}"))
 }
