@@ -107,6 +107,18 @@ const RECOMMENDED_V1_DOCUMENTS: &[(&str, &str)] = &[
         "suites/recommended/v1/pin-and-verify-dependencies.md",
         include_str!("../suites/recommended/v1/pin-and-verify-dependencies.md"),
     ),
+    (
+        "suites/recommended/v1/test-data-builders.md",
+        include_str!("../suites/recommended/v1/test-data-builders.md"),
+    ),
+    (
+        "suites/recommended/v1/structured-logging-over-printf.md",
+        include_str!("../suites/recommended/v1/structured-logging-over-printf.md"),
+    ),
+    (
+        "suites/recommended/v1/small-reviewable-changes.md",
+        include_str!("../suites/recommended/v1/small-reviewable-changes.md"),
+    ),
 ];
 
 pub fn recommended_v1() -> Result<Vec<Standard>, StandardError> {
