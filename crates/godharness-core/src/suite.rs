@@ -55,6 +55,58 @@ const RECOMMENDED_V1_DOCUMENTS: &[(&str, &str)] = &[
         "suites/recommended/v1/automate-everything.md",
         include_str!("../suites/recommended/v1/automate-everything.md"),
     ),
+    (
+        "suites/recommended/v1/dependency-direction.md",
+        include_str!("../suites/recommended/v1/dependency-direction.md"),
+    ),
+    (
+        "suites/recommended/v1/interface-segregation.md",
+        include_str!("../suites/recommended/v1/interface-segregation.md"),
+    ),
+    (
+        "suites/recommended/v1/liskov-substitutability.md",
+        include_str!("../suites/recommended/v1/liskov-substitutability.md"),
+    ),
+    (
+        "suites/recommended/v1/single-level-of-abstraction.md",
+        include_str!("../suites/recommended/v1/single-level-of-abstraction.md"),
+    ),
+    (
+        "suites/recommended/v1/dont-repeat-yourself.md",
+        include_str!("../suites/recommended/v1/dont-repeat-yourself.md"),
+    ),
+    (
+        "suites/recommended/v1/no-broken-windows.md",
+        include_str!("../suites/recommended/v1/no-broken-windows.md"),
+    ),
+    (
+        "suites/recommended/v1/ubiquitous-language.md",
+        include_str!("../suites/recommended/v1/ubiquitous-language.md"),
+    ),
+    (
+        "suites/recommended/v1/test-pyramid-shape.md",
+        include_str!("../suites/recommended/v1/test-pyramid-shape.md"),
+    ),
+    (
+        "suites/recommended/v1/test-independence.md",
+        include_str!("../suites/recommended/v1/test-independence.md"),
+    ),
+    (
+        "suites/recommended/v1/flaky-test-is-signal.md",
+        include_str!("../suites/recommended/v1/flaky-test-is-signal.md"),
+    ),
+    (
+        "suites/recommended/v1/injection-parameterize.md",
+        include_str!("../suites/recommended/v1/injection-parameterize.md"),
+    ),
+    (
+        "suites/recommended/v1/server-side-authorization.md",
+        include_str!("../suites/recommended/v1/server-side-authorization.md"),
+    ),
+    (
+        "suites/recommended/v1/pin-and-verify-dependencies.md",
+        include_str!("../suites/recommended/v1/pin-and-verify-dependencies.md"),
+    ),
 ];
 
 pub fn recommended_v1() -> Result<Vec<Standard>, StandardError> {
