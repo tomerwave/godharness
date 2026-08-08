@@ -1,4 +1,6 @@
+use std::collections::HashMap;
 use std::path::Path;
+use std::sync::LazyLock;
 
 use crate::skill::{Skill, parse_skill};
 use crate::standard::{Standard, StandardError, parse_standard};
@@ -151,16 +153,23 @@ const STANDARDS: &[(&str, &str, &str)] = &[
     ),
 ];
 
+static PARSED_STANDARDS: LazyLock<HashMap<&'static str, Result<Standard, StandardError>>> =
+    LazyLock::new(|| {
+        STANDARDS
+            .iter()
+            .map(|(id, path, document)| (*id, parse_standard(document, Path::new(path))))
+            .collect()
+    });
+
 pub fn standard(id: &str) -> Result<Standard, StandardError> {
-    let (_, path, document) = STANDARDS
-        .iter()
-        .find(|(entry_id, _, _)| *entry_id == id)
+    PARSED_STANDARDS
+        .get(id)
         .unwrap_or_else(|| {
             panic!(
                 "registry: unknown standard id {id:?} — this is a bug in suite.rs, not user input"
             )
-        });
-    parse_standard(document, Path::new(path))
+        })
+        .clone()
 }
 
 const SKILLS: &[(&str, &str, &str)] = &[
@@ -186,13 +195,23 @@ const SKILLS: &[(&str, &str, &str)] = &[
     ),
 ];
 
-pub fn skill(id: &str) -> Skill {
-    let (_, path, document) = SKILLS
+static PARSED_SKILLS: LazyLock<HashMap<&'static str, Skill>> = LazyLock::new(|| {
+    SKILLS
         .iter()
-        .find(|(entry_id, _, _)| *entry_id == id)
+        .map(|(id, path, document)| {
+            let skill = parse_skill(document, id, Path::new(path)).unwrap_or_else(|error| {
+                panic!("registry: embedded skill {id:?} failed to parse: {error}")
+            });
+            (*id, skill)
+        })
+        .collect()
+});
+
+pub fn skill(id: &str) -> Skill {
+    PARSED_SKILLS
+        .get(id)
         .unwrap_or_else(|| {
             panic!("registry: unknown skill id {id:?} — this is a bug in suite.rs, not user input")
-        });
-    parse_skill(document, id, Path::new(path))
-        .unwrap_or_else(|error| panic!("registry: embedded skill {id:?} failed to parse: {error}"))
+        })
+        .clone()
 }

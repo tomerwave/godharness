@@ -21,7 +21,7 @@ pub struct Standard {
     pub source_path: PathBuf,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StandardError(String);
 
 impl std::fmt::Display for StandardError {

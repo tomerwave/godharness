@@ -89,6 +89,17 @@ fn load_suite_standards(config: &Config) -> Result<Vec<Standard>, CheckError> {
     Ok(standards)
 }
 
+pub fn enabled_adapter_names(config: &Config) -> Vec<String> {
+    let mut names: Vec<String> = config
+        .adapters
+        .iter()
+        .filter(|(_, enabled)| **enabled)
+        .map(|(name, _)| name.clone())
+        .collect();
+    names.sort_unstable();
+    names
+}
+
 pub fn load_suite_skills(config: &Config) -> Vec<Skill> {
     config
         .suites
