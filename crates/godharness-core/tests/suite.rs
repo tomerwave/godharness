@@ -79,7 +79,7 @@ fn embedded_documents_form_a_valid_graph() {
 }
 
 #[test]
-fn must_read_standards_are_secrets_simplify_and_verify() {
+fn must_read_standards() {
     let standards = recommended_v1().expect("every embedded document should parse");
 
     let must_read: Vec<&str> = standards
@@ -94,6 +94,8 @@ fn must_read_standards_are_secrets_simplify_and_verify() {
             "secrets-and-security",
             "simplify-before-done",
             "verify-through-real-path",
+            "leave-code-cleaner-than-you-found-it",
+            "concise-communication",
         ]
     );
 }

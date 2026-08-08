@@ -3,7 +3,7 @@ id: leave-code-cleaner-than-you-found-it
 title: Leave Code Cleaner Than You Found It
 keywords: [boy scout rule, leave it cleaner, out of scope, drive-by fix]
 paths: []
-must-read: false
+must-read: true
 supersedes: []
 relates-to: [simplify-before-done, small-reviewable-changes]
 ---
