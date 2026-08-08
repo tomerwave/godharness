@@ -6,6 +6,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before `1.0`, a `0.x` release may
 change the CLI surface or configuration schema.
 
+## [0.1.4] - 2026-08-08
+
+### Added
+
+- `recommended@1` now bundles 4 skills alongside its 29 standards —
+  isolate-refactoring-from-behavior-change, property-based-testing, atomic-commits,
+  resource-oriented-api-design — as real `SKILL.md` files. `godharness adapters
+  enable`/`update` install them into `.claude/skills/` (Claude Code) or `.agents/skills/`
+  (Codex), merge-not-clobber, the same idempotency model as hook config.
+
+### Internal
+
+- Standards and skills moved off suite/version-nested storage (`suites/recommended/v1/`)
+  into a flat registry (`crates/godharness-core/src/registry.rs`) with suites as manifests
+  referencing registry ids by reference, mirroring godlint's rules/suites split — a future
+  second suite can reuse standards/skills with zero file duplication.
+- `registry::standard()`/`skill()` now parse the embedded corpus once instead of on every
+  call; `update_repository` no longer reads `godharness.yaml` twice per invocation; keyword
+  and path matching cache their compiled regex/glob patterns instead of recompiling per call.
+- Nine hand-written error types collapsed onto a shared macro; nine near-identical test
+  temp-directory helpers and four `Standard` test builders consolidated into
+  `tests/common/mod.rs` per crate.
+
 ## [0.1.3] - 2026-08-08
 
 ### Added
