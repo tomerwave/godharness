@@ -1,6 +1,8 @@
 ---
 name: property-based-testing
 description: How to frame invariants and choose generators for property-based tests, rather than hand-picked examples.
+keywords: [property test, property-based testing, fuzz test, generative test]
+paths: []
 ---
 
 # Property-Based Testing

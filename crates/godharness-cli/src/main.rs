@@ -240,9 +240,14 @@ fn run_adapter_hook(_tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
     let Ok(graph) = godharness_core::load_repository_graph(&root) else {
         return ExitCode::SUCCESS;
     };
-    let reinject_after_prompts = godharness_core::load_config(&root)
-        .map(|config| config.reinject_after_prompts)
-        .unwrap_or(0);
+    let config = godharness_core::load_config(&root).unwrap_or_else(|_| godharness_core::Config {
+        version: 1,
+        suites: Vec::new(),
+        standards: Vec::new(),
+        adapters: Default::default(),
+        reinject_after_prompts: 0,
+    });
+    let skills = godharness_core::load_suite_skills(&config);
     let mut state = inputs
         .session_id
         .as_deref()
@@ -252,9 +257,9 @@ fn run_adapter_hook(_tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
     let request = godharness_core::HookRequest {
         event: event.into(),
         prompt: inputs.prompt.as_deref(),
-        reinject_after_prompts,
+        reinject_after_prompts: config.reinject_after_prompts,
     };
-    let response = godharness_core::claude_code_hook_response(&graph, request, &mut state);
+    let response = godharness_core::claude_code_hook_response(&graph, &skills, request, &mut state);
 
     if let Some(session_id) = inputs.session_id.as_deref() {
         save_session_state(session_id, &state);

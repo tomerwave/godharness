@@ -1,6 +1,8 @@
 ---
 name: research-with-evidence
 description: Research a question against primary sources, verify every cited link actually supports its claim, and write a concise doc with a proposal and the evidence for and against each option.
+keywords: [which library, which tool, should we use, evaluate options, compare options]
+paths: []
 ---
 
 # Research With Evidence

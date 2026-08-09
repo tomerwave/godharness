@@ -1,6 +1,8 @@
 ---
 name: isolate-refactoring-from-behavior-change
 description: Never mix structural refactoring and behavior changes in the same commit or step.
+keywords: [refactor, refactoring]
+paths: []
 ---
 
 # Isolate Refactoring From Behavior Change

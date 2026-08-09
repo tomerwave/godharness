@@ -1,6 +1,8 @@
 ---
 name: requesting-code-review
 description: Get an independent review pass — a fresh context, not the one that wrote the change — before merging or after finishing a major piece of work.
+keywords: [open a pr, ready for review, before merging, ship this, merge to main]
+paths: []
 ---
 
 # Requesting Code Review

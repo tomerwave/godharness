@@ -1,6 +1,8 @@
 ---
 name: systematic-debugging
 description: Root-cause every bug before proposing a fix — reproduce first, then hypothesize with an explicit confidence score if you can't.
+keywords: [bug, broken, failing test, crash, unexpected behavior, doesn't work, stack trace]
+paths: []
 ---
 
 # Systematic Debugging

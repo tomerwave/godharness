@@ -1,6 +1,8 @@
 ---
 name: resource-oriented-api-design
 description: How to shape an HTTP or RPC endpoint around a resource noun and the standard verb set, instead of custom action methods.
+keywords: [new endpoint, rest api, api design, graphql schema, rpc]
+paths: []
 ---
 
 # Resource-Oriented API Design

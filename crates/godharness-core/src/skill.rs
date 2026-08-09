@@ -12,6 +12,8 @@ pub struct Skill {
     pub name: String,
     pub description: String,
     pub body: String,
+    pub keywords: Vec<String>,
+    pub paths: Vec<String>,
     pub source_path: PathBuf,
 }
 
@@ -21,6 +23,10 @@ string_error!(SkillError, "invalid skill document: ");
 struct Frontmatter {
     name: String,
     description: String,
+    #[serde(default)]
+    keywords: Vec<String>,
+    #[serde(default)]
+    paths: Vec<String>,
 }
 
 pub fn parse_skill(document: &str, id: &str, source_path: &Path) -> Result<Skill, SkillError> {
@@ -36,6 +42,8 @@ pub fn parse_skill(document: &str, id: &str, source_path: &Path) -> Result<Skill
         name: frontmatter.name,
         description: frontmatter.description,
         body: parsed.content.trim().to_string(),
+        keywords: frontmatter.keywords,
+        paths: frontmatter.paths,
         source_path: source_path.to_path_buf(),
     })
 }

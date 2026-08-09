@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 use crate::graph::StandardGraph;
+use crate::skill::Skill;
 use crate::standard::{Standard, keyword_matches, path_matches};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -54,5 +55,47 @@ pub fn resolve_by_keyword_only(graph: &StandardGraph, prompt: &str) -> Vec<Resol
         .filter(|standard| !graph.is_superseded(&standard.id))
         .filter(|standard| keyword_matches(prompt, &standard.keywords))
         .map(|standard| to_resolved(graph, standard))
+        .collect()
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ResolvedSkill {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+}
+
+fn is_skill_relevant(skill: &Skill, prompt: Option<&str>, paths: &[String]) -> bool {
+    if prompt.is_some_and(|prompt| keyword_matches(prompt, &skill.keywords)) {
+        return true;
+    }
+    paths.iter().any(|path| path_matches(path, &skill.paths))
+}
+
+fn to_resolved_skill(skill: &Skill) -> ResolvedSkill {
+    ResolvedSkill {
+        id: skill.id.clone(),
+        name: skill.name.clone(),
+        description: skill.description.clone(),
+    }
+}
+
+pub fn resolve_skills(
+    skills: &[Skill],
+    prompt: Option<&str>,
+    paths: &[String],
+) -> Vec<ResolvedSkill> {
+    skills
+        .iter()
+        .filter(|skill| is_skill_relevant(skill, prompt, paths))
+        .map(to_resolved_skill)
+        .collect()
+}
+
+pub fn resolve_skills_by_keyword_only(skills: &[Skill], prompt: &str) -> Vec<ResolvedSkill> {
+    skills
+        .iter()
+        .filter(|skill| keyword_matches(prompt, &skill.keywords))
+        .map(to_resolved_skill)
         .collect()
 }

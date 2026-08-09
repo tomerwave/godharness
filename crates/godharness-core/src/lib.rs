@@ -28,7 +28,10 @@ pub use check::{
 pub use doctor::{DoctorReport, run_doctor};
 pub use graph::{EdgeKind, GraphError, StandardGraph, build_graph, content_hash};
 pub use init::{InitError, InitReport, run_init};
-pub use resolve::{ResolvedStandard, resolve, resolve_by_keyword_only};
+pub use resolve::{
+    ResolvedSkill, ResolvedStandard, resolve, resolve_by_keyword_only, resolve_skills,
+    resolve_skills_by_keyword_only,
+};
 pub use skill::{Skill, SkillError, parse_skill};
 pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
 pub use suite::{recommended_v1, recommended_v1_skills};

@@ -2,7 +2,11 @@ use serde::Serialize;
 
 use crate::adapters::debounce::{SessionState, record_injection, should_inject};
 use crate::graph::StandardGraph;
-use crate::resolve::{ResolvedStandard, resolve, resolve_by_keyword_only};
+use crate::resolve::{
+    ResolvedSkill, ResolvedStandard, resolve, resolve_by_keyword_only, resolve_skills,
+    resolve_skills_by_keyword_only,
+};
+use crate::skill::Skill;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ClaudeCodeEvent {
@@ -40,15 +44,32 @@ struct HookOutput {
     hook_specific_output: HookSpecificOutput,
 }
 
-fn format_context(standards: &[ResolvedStandard]) -> String {
-    let lines: Vec<String> = standards
-        .iter()
-        .map(|standard| format!("- {}: {}", standard.id, standard.rule))
-        .collect();
-    format!("Relevant project standard(s):\n{}", lines.join("\n"))
+fn format_context(standards: &[ResolvedStandard], skills: &[ResolvedSkill]) -> String {
+    let mut sections = Vec::new();
+    if !standards.is_empty() {
+        let lines: Vec<String> = standards
+            .iter()
+            .map(|standard| format!("- {}: {}", standard.id, standard.rule))
+            .collect();
+        sections.push(format!(
+            "Relevant project standard(s):\n{}",
+            lines.join("\n")
+        ));
+    }
+    if !skills.is_empty() {
+        let lines: Vec<String> = skills
+            .iter()
+            .map(|skill| format!("- {}: {}", skill.name, skill.description))
+            .collect();
+        sections.push(format!(
+            "Skill(s) that may help with this — consider invoking them:\n{}",
+            lines.join("\n")
+        ));
+    }
+    sections.join("\n\n")
 }
 
-fn debounced(
+fn debounced_standards(
     state: &mut SessionState,
     standards: Vec<ResolvedStandard>,
     reinject_after_prompts: u32,
@@ -63,37 +84,64 @@ fn debounced(
     kept
 }
 
+fn debounced_skills(
+    state: &mut SessionState,
+    skills: Vec<ResolvedSkill>,
+    reinject_after_prompts: u32,
+) -> Vec<ResolvedSkill> {
+    let mut kept = Vec::new();
+    for skill in skills {
+        let key = format!("skill:{}", skill.id);
+        if should_inject(state, &key, reinject_after_prompts) {
+            record_injection(state, &key);
+            kept.push(skill);
+        }
+    }
+    kept
+}
+
 fn resolve_for_event(
     graph: &StandardGraph,
+    skills: &[Skill],
     request: &HookRequest,
     state: &mut SessionState,
-) -> Vec<ResolvedStandard> {
+) -> (Vec<ResolvedStandard>, Vec<ResolvedSkill>) {
     match request.event {
         ClaudeCodeEvent::UserPromptSubmit => {
             state.prompt_count += 1;
-            let matched = request
+            let matched_standards = request
                 .prompt
                 .map(|prompt| resolve_by_keyword_only(graph, prompt))
                 .unwrap_or_default();
-            debounced(state, matched, request.reinject_after_prompts)
+            let matched_skills = request
+                .prompt
+                .map(|prompt| resolve_skills_by_keyword_only(skills, prompt))
+                .unwrap_or_default();
+            (
+                debounced_standards(state, matched_standards, request.reinject_after_prompts),
+                debounced_skills(state, matched_skills, request.reinject_after_prompts),
+            )
         }
-        ClaudeCodeEvent::SessionStart => resolve(graph, None, &[]),
+        ClaudeCodeEvent::SessionStart => {
+            (resolve(graph, None, &[]), resolve_skills(skills, None, &[]))
+        }
     }
 }
 
 pub fn claude_code_hook_response(
     graph: &StandardGraph,
+    skills: &[Skill],
     request: HookRequest,
     state: &mut SessionState,
 ) -> Option<String> {
-    let resolved = resolve_for_event(graph, &request, state);
-    if resolved.is_empty() {
+    let (resolved_standards, resolved_skills) = resolve_for_event(graph, skills, &request, state);
+    if resolved_standards.is_empty() && resolved_skills.is_empty() {
         return None;
     }
     let output = HookOutput {
         hook_specific_output: HookSpecificOutput {
             hook_event_name: request.event.name().to_string(),
-            additional_context: format_context(&resolved),
+            additional_context: format_context(&resolved_standards, &resolved_skills),
         },
     };
     serde_json::to_string(&output).ok()
