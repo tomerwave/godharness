@@ -6,6 +6,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before `1.0`, a `0.x` release may
 change the CLI surface or configuration schema.
 
+## [0.1.6] - 2026-08-09
+
+### Added
+
+- Skills can now auto-trigger the same way standards do: optional `keywords`/`paths`
+  frontmatter (mirroring `Standard`), matched against `UserPromptSubmit` prompts and injected
+  as a one-line nudge alongside matched standards. 8 of 15 shipped skills curated with
+  keywords/paths (`systematic-debugging`, `requesting-code-review`, `receiving-code-review`,
+  `research-with-evidence`, `frontend-design`, `isolate-refactoring-from-behavior-change`,
+  `property-based-testing`, `resource-oriented-api-design`); the rest are left
+  user/host-triggered only.
+- `recommended@1` gained 2 skills: `clarify-before-building` (a portable, tool-agnostic
+  requirements-clarification interview, closing the gap `deep-interview`-style tools leave)
+  and `doubt-driven-development` (adversarial fresh-context review of individual non-trivial
+  decisions in-flight, not just at PR time). 15 skills total (was 13).
+
 ## [0.1.5] - 2026-08-09
 
 ### Added
