@@ -9,6 +9,7 @@ fn standard_event(id: &str, approx_tokens: u32, model: Option<&str>) -> UsageEve
         id: id.to_string(),
         approx_tokens,
         model: model.map(str::to_string),
+        session_id: None,
     }
 }
 

@@ -11,3 +11,10 @@ exclude:
   - packaging
 
 suites: [recommended@1]
+
+rules:
+  testing/assertion-required:
+    severity: warning
+    extra-assertions:
+      - assert_nothing_priced_yet
+      - assert_backfilled_to_sonnet

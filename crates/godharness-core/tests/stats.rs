@@ -49,6 +49,7 @@ fn append_and_read_events_round_trips() {
             id: "secrets-and-security".to_string(),
             approx_tokens: 12,
             model: None,
+            session_id: None,
         },
         UsageEvent {
             timestamp_unix: 101,
@@ -56,6 +57,7 @@ fn append_and_read_events_round_trips() {
             id: "systematic-debugging".to_string(),
             approx_tokens: 30,
             model: None,
+            session_id: None,
         },
     ];
 
@@ -78,6 +80,7 @@ fn append_events_is_cumulative_across_calls() {
             id: "a".to_string(),
             approx_tokens: 5,
             model: None,
+            session_id: None,
         }],
     )
     .expect("first append should succeed");
@@ -90,6 +93,7 @@ fn append_events_is_cumulative_across_calls() {
             id: "a".to_string(),
             approx_tokens: 5,
             model: None,
+            session_id: None,
         }],
     )
     .expect("second append should succeed");
@@ -114,6 +118,7 @@ fn aggregate_sums_tokens_and_counts_fires_per_id_sorted_by_cost() {
             id: "small".to_string(),
             approx_tokens: 5,
             model: None,
+            session_id: None,
         },
         UsageEvent {
             timestamp_unix: 2,
@@ -121,6 +126,7 @@ fn aggregate_sums_tokens_and_counts_fires_per_id_sorted_by_cost() {
             id: "big".to_string(),
             approx_tokens: 50,
             model: None,
+            session_id: None,
         },
         UsageEvent {
             timestamp_unix: 3,
@@ -128,6 +134,7 @@ fn aggregate_sums_tokens_and_counts_fires_per_id_sorted_by_cost() {
             id: "small".to_string(),
             approx_tokens: 5,
             model: None,
+            session_id: None,
         },
     ];
 
@@ -161,6 +168,7 @@ fn aggregate_keeps_standards_and_skills_with_the_same_id_separate() {
             id: "shared-id".to_string(),
             approx_tokens: 10,
             model: None,
+            session_id: None,
         },
         UsageEvent {
             timestamp_unix: 2,
@@ -168,6 +176,7 @@ fn aggregate_keeps_standards_and_skills_with_the_same_id_separate() {
             id: "shared-id".to_string(),
             approx_tokens: 20,
             model: None,
+            session_id: None,
         },
     ];
 

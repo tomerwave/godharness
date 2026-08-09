@@ -41,8 +41,8 @@ pub use resolve::{
 pub use skill::{Skill, SkillError, parse_skill};
 pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
 pub use stats::{
-    StatEntry, UsageEvent, UsageKind, aggregate, append_events, approx_tokens, read_events,
-    usage_log_path,
+    StatEntry, UsageEvent, UsageKind, aggregate, append_events, approx_tokens, backfill_model,
+    read_events, usage_log_path,
 };
 pub use suite::{recommended_v1, recommended_v1_skills};
 pub use update::{UpdateError, UpdateReport, update_repository};

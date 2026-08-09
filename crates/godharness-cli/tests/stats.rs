@@ -14,6 +14,7 @@ fn temp_home(name: &str) -> TempRepo {
 struct HookCall<'a> {
     repo: &'a std::path::Path,
     home: &'a std::path::Path,
+    event: &'a str,
     prompt: &'a str,
     session_id: &'a str,
     transcript_path: Option<&'a std::path::Path>,
@@ -26,7 +27,7 @@ fn run_adapter_hook_with_transcript(call: HookCall) {
         .arg("adapter-hook")
         .arg("claude-code")
         .arg("--event")
-        .arg("user-prompt-submit")
+        .arg(call.event)
         .current_dir(call.repo)
         .env("HOME", call.home)
         .stdin(Stdio::piped())
@@ -61,9 +62,27 @@ fn run_adapter_hook(repo: &std::path::Path, home: &std::path::Path, prompt: &str
     run_adapter_hook_with_transcript(HookCall {
         repo,
         home,
+        event: "user-prompt-submit",
         prompt,
         session_id: "stats-test",
         transcript_path: None,
+    });
+}
+
+#[allow(clippy::expect_used)]
+fn run_stop_hook(
+    repo: &std::path::Path,
+    home: &std::path::Path,
+    session_id: &str,
+    transcript_path: &std::path::Path,
+) {
+    run_adapter_hook_with_transcript(HookCall {
+        repo,
+        home,
+        event: "stop",
+        prompt: "",
+        session_id,
+        transcript_path: Some(transcript_path),
     });
 }
 
@@ -175,6 +194,7 @@ fn stats_prices_usage_by_the_model_detected_from_the_transcript() {
     run_adapter_hook_with_transcript(HookCall {
         repo: &repo.path,
         home: &home.path,
+        event: "user-prompt-submit",
         prompt: "add a credential to config",
         session_id: "model-detect-session",
         transcript_path: Some(&transcript_path),
@@ -223,4 +243,77 @@ fn stats_model_override_reprices_every_token_as_the_named_model() {
         parsed["cost"]["unpriced_tokens"], 0,
         "the override should price events that had no detected model"
     );
+}
+
+#[allow(clippy::expect_used)]
+fn assert_nothing_priced_yet(repo: &std::path::Path, home: &std::path::Path) {
+    let before = run_stats(repo, home, &["--json"]);
+    let before_parsed: serde_json::Value = serde_json::from_str(&before).expect("valid JSON");
+    assert!(
+        before_parsed["cost"]["priced"]
+            .as_array()
+            .expect("priced should be an array")
+            .is_empty(),
+        "nothing should be priced before Stop fires"
+    );
+    assert!(
+        before_parsed["cost"]["unpriced_tokens"]
+            .as_u64()
+            .expect("unpriced_tokens should be a number")
+            > 0
+    );
+}
+
+#[allow(clippy::expect_used)]
+fn assert_backfilled_to_sonnet(repo: &std::path::Path, home: &std::path::Path) {
+    let after = run_stats(repo, home, &["--json"]);
+    let after_parsed: serde_json::Value = serde_json::from_str(&after).expect("valid JSON");
+    let priced = after_parsed["cost"]["priced"]
+        .as_array()
+        .expect("priced should be an array");
+
+    assert_eq!(
+        priced.len(),
+        1,
+        "Stop should have backfilled the first turn's events"
+    );
+    assert_eq!(priced[0]["model"], "claude-sonnet-4-6");
+    assert_eq!(after_parsed["cost"]["unpriced_tokens"], 0);
+}
+
+#[allow(clippy::expect_used)]
+#[test]
+fn stop_hook_backfills_the_first_turns_unpriced_events() {
+    let repo = temp_repo("stop-backfill");
+    let home = temp_home("stop-backfill");
+    godharness()
+        .arg("init")
+        .current_dir(&repo.path)
+        .output()
+        .expect("run godharness init");
+
+    let transcript_path = repo.path.join("transcript.jsonl");
+    let session_id = "stop-backfill-session";
+
+    run_adapter_hook_with_transcript(HookCall {
+        repo: &repo.path,
+        home: &home.path,
+        event: "user-prompt-submit",
+        prompt: "add a credential to config",
+        session_id,
+        transcript_path: None,
+    });
+
+    assert_nothing_priced_yet(&repo.path, &home.path);
+
+    std::fs::write(
+        &transcript_path,
+        r#"{"type":"assistant","message":{"model":"claude-sonnet-4-6"}}
+"#,
+    )
+    .expect("write fake transcript");
+
+    run_stop_hook(&repo.path, &home.path, session_id, &transcript_path);
+
+    assert_backfilled_to_sonnet(&repo.path, &home.path);
 }
