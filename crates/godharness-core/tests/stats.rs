@@ -48,12 +48,14 @@ fn append_and_read_events_round_trips() {
             kind: UsageKind::Standard,
             id: "secrets-and-security".to_string(),
             approx_tokens: 12,
+            model: None,
         },
         UsageEvent {
             timestamp_unix: 101,
             kind: UsageKind::Skill,
             id: "systematic-debugging".to_string(),
             approx_tokens: 30,
+            model: None,
         },
     ];
 
@@ -75,6 +77,7 @@ fn append_events_is_cumulative_across_calls() {
             kind: UsageKind::Standard,
             id: "a".to_string(),
             approx_tokens: 5,
+            model: None,
         }],
     )
     .expect("first append should succeed");
@@ -86,6 +89,7 @@ fn append_events_is_cumulative_across_calls() {
             kind: UsageKind::Standard,
             id: "a".to_string(),
             approx_tokens: 5,
+            model: None,
         }],
     )
     .expect("second append should succeed");
@@ -109,18 +113,21 @@ fn aggregate_sums_tokens_and_counts_fires_per_id_sorted_by_cost() {
             kind: UsageKind::Standard,
             id: "small".to_string(),
             approx_tokens: 5,
+            model: None,
         },
         UsageEvent {
             timestamp_unix: 2,
             kind: UsageKind::Standard,
             id: "big".to_string(),
             approx_tokens: 50,
+            model: None,
         },
         UsageEvent {
             timestamp_unix: 3,
             kind: UsageKind::Standard,
             id: "small".to_string(),
             approx_tokens: 5,
+            model: None,
         },
     ];
 
@@ -153,12 +160,14 @@ fn aggregate_keeps_standards_and_skills_with_the_same_id_separate() {
             kind: UsageKind::Standard,
             id: "shared-id".to_string(),
             approx_tokens: 10,
+            model: None,
         },
         UsageEvent {
             timestamp_unix: 2,
             kind: UsageKind::Skill,
             id: "shared-id".to_string(),
             approx_tokens: 20,
+            model: None,
         },
     ];
 

@@ -15,6 +15,8 @@ pub struct UsageEvent {
     pub kind: UsageKind,
     pub id: String,
     pub approx_tokens: u32,
+    #[serde(default)]
+    pub model: Option<String>,
 }
 
 pub fn approx_tokens(text: &str) -> u32 {

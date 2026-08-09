@@ -8,6 +8,7 @@ pub mod doctor;
 mod error;
 pub mod graph;
 pub mod init;
+pub mod pricing;
 pub mod registry;
 pub mod resolve;
 pub mod skill;
@@ -29,6 +30,10 @@ pub use check::{
 pub use doctor::{DoctorReport, run_doctor};
 pub use graph::{EdgeKind, GraphError, StandardGraph, build_graph, content_hash};
 pub use init::{InitError, InitReport, run_init};
+pub use pricing::{
+    CostReport, ModelCostEntry, ModelRate, estimate_cost, rate_for, snapshot_fetched_at,
+    snapshot_source,
+};
 pub use resolve::{
     ResolvedSkill, ResolvedStandard, resolve, resolve_by_keyword_only, resolve_skills,
     resolve_skills_by_keyword_only,
