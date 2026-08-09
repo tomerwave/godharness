@@ -53,6 +53,7 @@ fn user_prompt_submit_returns_json_when_a_keyword_matches() {
         request(ClaudeCodeEvent::UserPromptSubmit, Some("found an error"), 0),
         &mut state,
     )
+    .response
     .expect("a match should produce output");
 
     let parsed: serde_json::Value = serde_json::from_str(&response).expect("valid JSON");
@@ -75,7 +76,7 @@ fn user_prompt_submit_returns_none_when_nothing_matches() {
         &mut state,
     );
 
-    assert_eq!(response, None);
+    assert_eq!(response.response, None);
 }
 
 #[test]
@@ -94,6 +95,7 @@ fn user_prompt_submit_matches_must_read_standards_by_keyword_too() {
         ),
         &mut state,
     )
+    .response
     .expect("a keyword match on a must-read standard should still produce output");
 
     assert!(additional_context(&response).contains("secrets"));
@@ -116,7 +118,7 @@ fn user_prompt_submit_ignores_must_read_when_no_keyword_matches() {
         &mut state,
     );
 
-    assert_eq!(response, None);
+    assert_eq!(response.response, None);
 }
 
 #[test]
@@ -131,7 +133,7 @@ fn user_prompt_submit_repeats_on_every_matching_prompt_by_default() {
             request(ClaudeCodeEvent::UserPromptSubmit, Some("found an error"), 0),
             &mut state,
         );
-        assert!(response.is_some());
+        assert!(response.response.is_some());
     }
 }
 
@@ -147,7 +149,7 @@ fn user_prompt_submit_debounces_repeats_within_the_configured_window() {
         request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
         &mut state,
     );
-    assert!(first.is_some());
+    assert!(first.response.is_some());
 
     let second = claude_code_hook_response(
         &graph,
@@ -155,7 +157,7 @@ fn user_prompt_submit_debounces_repeats_within_the_configured_window() {
         request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
         &mut state,
     );
-    assert_eq!(second, None);
+    assert_eq!(second.response, None);
 
     let third = claude_code_hook_response(
         &graph,
@@ -163,7 +165,7 @@ fn user_prompt_submit_debounces_repeats_within_the_configured_window() {
         request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
         &mut state,
     );
-    assert_eq!(third, None);
+    assert_eq!(third.response, None);
 
     let fourth = claude_code_hook_response(
         &graph,
@@ -171,7 +173,7 @@ fn user_prompt_submit_debounces_repeats_within_the_configured_window() {
         request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
         &mut state,
     );
-    assert!(fourth.is_some());
+    assert!(fourth.response.is_some());
 }
 
 #[test]
@@ -189,6 +191,7 @@ fn session_start_returns_only_must_read_standards() {
         request(ClaudeCodeEvent::SessionStart, None, 0),
         &mut state,
     )
+    .response
     .expect("must-read standards should produce output");
 
     let parsed: serde_json::Value = serde_json::from_str(&response).expect("valid JSON");
@@ -214,7 +217,7 @@ fn session_start_returns_none_when_no_standard_is_must_read() {
         &mut state,
     );
 
-    assert_eq!(response, None);
+    assert_eq!(response.response, None);
 }
 
 #[test]
@@ -233,7 +236,7 @@ fn session_start_is_unaffected_by_debounce_state() {
         &mut state,
     );
 
-    assert!(response.is_some());
+    assert!(response.response.is_some());
 }
 
 #[test]
@@ -248,6 +251,7 @@ fn user_prompt_submit_nudges_a_skill_when_its_keyword_matches() {
         request(ClaudeCodeEvent::UserPromptSubmit, Some("this is broken"), 0),
         &mut state,
     )
+    .response
     .expect("a skill keyword match should produce output");
 
     let context = additional_context(&response);
@@ -272,7 +276,7 @@ fn user_prompt_submit_returns_none_when_no_skill_keyword_matches() {
         &mut state,
     );
 
-    assert_eq!(response, None);
+    assert_eq!(response.response, None);
 }
 
 #[test]
@@ -289,6 +293,7 @@ fn skill_nudges_debounce_independently_of_a_same_named_standard() {
         request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
         &mut state,
     )
+    .response
     .expect("first prompt should match both the standard and the skill");
     assert!(additional_context(&first).contains("shared-id"));
 
@@ -299,7 +304,7 @@ fn skill_nudges_debounce_independently_of_a_same_named_standard() {
         &mut state,
     );
     assert_eq!(
-        second, None,
+        second.response, None,
         "both the standard and the skill should be debounced on the second prompt"
     );
 }
@@ -317,5 +322,5 @@ fn session_start_never_nudges_skills() {
         &mut state,
     );
 
-    assert_eq!(response, None);
+    assert_eq!(response.response, None);
 }

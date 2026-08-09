@@ -128,15 +128,26 @@ fn resolve_for_event(
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct HookResult {
+    pub response: Option<String>,
+    pub standards: Vec<ResolvedStandard>,
+    pub skills: Vec<ResolvedSkill>,
+}
+
 pub fn claude_code_hook_response(
     graph: &StandardGraph,
     skills: &[Skill],
     request: HookRequest,
     state: &mut SessionState,
-) -> Option<String> {
+) -> HookResult {
     let (resolved_standards, resolved_skills) = resolve_for_event(graph, skills, &request, state);
     if resolved_standards.is_empty() && resolved_skills.is_empty() {
-        return None;
+        return HookResult {
+            response: None,
+            standards: resolved_standards,
+            skills: resolved_skills,
+        };
     }
     let output = HookOutput {
         hook_specific_output: HookSpecificOutput {
@@ -144,5 +155,9 @@ pub fn claude_code_hook_response(
             additional_context: format_context(&resolved_standards, &resolved_skills),
         },
     };
-    serde_json::to_string(&output).ok()
+    HookResult {
+        response: serde_json::to_string(&output).ok(),
+        standards: resolved_standards,
+        skills: resolved_skills,
+    }
 }
