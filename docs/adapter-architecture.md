@@ -214,6 +214,26 @@ after install — but Codex's *mid-session* live-reload behavior for skills rema
 and unverified, since a fresh `codex exec` process necessarily rescans at its own startup
 regardless.
 
+**Skill auto-triggering, built 2026-08-09.** Both host tools rely on their own self-discovery
+of installed skills (reading `name`/`description`, deciding when to invoke) — the same
+reliability gap that made meta-skills like `using-superpowers` necessary elsewhere. Skills now
+carry the same optional `keywords`/`paths` frontmatter fields `Standard` already has (empty by
+default — existing skills are unaffected unless curated). The same `UserPromptSubmit`/
+`SessionStart` hook that injects matched standards' `Rule` text now also injects a one-line
+nudge per matched skill (name + description, not the full body — the same "pointer, not
+payload" choice `must-read` standards already made) into `additionalContext`, debounced the
+same way as standards but under a `skill:`-prefixed key so a skill and a standard sharing an id
+can't collide. `SessionStart` never nudges skills (no must-read equivalent exists for skills
+yet) — only `UserPromptSubmit` keyword matches fire. 8 of 15 shipped skills were curated with
+keywords/paths (`systematic-debugging`, `requesting-code-review`, `receiving-code-review`,
+`research-with-evidence`, `frontend-design`, `isolate-refactoring-from-behavior-change`,
+`property-based-testing`, `resource-oriented-api-design`); the other 7 were left without
+auto-trigger deliberately — skills like `simplify`/`ai-slop-cleaner` are meant for the end of a
+change, not a keyword mid-prompt, and `retrospective-workflow-review` is explicitly
+user-triggered-only per its own SKILL.md. Verified with the real binary: a prompt containing
+"failing" and "stack trace" produced both a matched standard and a `systematic-debugging`
+skill nudge in one `additionalContext` payload.
+
 #### Gemini CLI
 
 Official, first-party, stable hook system — the richest event model surveyed after Claude

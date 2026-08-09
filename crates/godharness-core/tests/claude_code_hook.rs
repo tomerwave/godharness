@@ -1,11 +1,24 @@
 use godharness_core::{
-    ClaudeCodeEvent, HookRequest, SessionState, Standard, build_graph, claude_code_hook_response,
+    ClaudeCodeEvent, HookRequest, SessionState, Skill, Standard, build_graph,
+    claude_code_hook_response,
 };
 
 mod common;
 
 fn standard(id: &str, keywords: &[&str], must_read: bool) -> Standard {
     common::standard(id, keywords, &[], must_read)
+}
+
+fn skill(id: &str, keywords: &[&str]) -> Skill {
+    Skill {
+        id: id.to_string(),
+        name: id.to_string(),
+        description: format!("Description for {id}."),
+        body: "Body.".to_string(),
+        keywords: keywords.iter().map(|s| s.to_string()).collect(),
+        paths: Vec::new(),
+        source_path: std::path::Path::new(&format!("{id}/SKILL.md")).to_path_buf(),
+    }
 }
 
 fn request(
@@ -36,6 +49,7 @@ fn user_prompt_submit_returns_json_when_a_keyword_matches() {
 
     let response = claude_code_hook_response(
         &graph,
+        &[],
         request(ClaudeCodeEvent::UserPromptSubmit, Some("found an error"), 0),
         &mut state,
     )
@@ -56,6 +70,7 @@ fn user_prompt_submit_returns_none_when_nothing_matches() {
 
     let response = claude_code_hook_response(
         &graph,
+        &[],
         request(ClaudeCodeEvent::UserPromptSubmit, Some("hello"), 0),
         &mut state,
     );
@@ -71,6 +86,7 @@ fn user_prompt_submit_matches_must_read_standards_by_keyword_too() {
 
     let response = claude_code_hook_response(
         &graph,
+        &[],
         request(
             ClaudeCodeEvent::UserPromptSubmit,
             Some("add a credential"),
@@ -91,6 +107,7 @@ fn user_prompt_submit_ignores_must_read_when_no_keyword_matches() {
 
     let response = claude_code_hook_response(
         &graph,
+        &[],
         request(
             ClaudeCodeEvent::UserPromptSubmit,
             Some("unrelated wording"),
@@ -110,6 +127,7 @@ fn user_prompt_submit_repeats_on_every_matching_prompt_by_default() {
     for _ in 0..3 {
         let response = claude_code_hook_response(
             &graph,
+            &[],
             request(ClaudeCodeEvent::UserPromptSubmit, Some("found an error"), 0),
             &mut state,
         );
@@ -125,6 +143,7 @@ fn user_prompt_submit_debounces_repeats_within_the_configured_window() {
 
     let first = claude_code_hook_response(
         &graph,
+        &[],
         request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
         &mut state,
     );
@@ -132,6 +151,7 @@ fn user_prompt_submit_debounces_repeats_within_the_configured_window() {
 
     let second = claude_code_hook_response(
         &graph,
+        &[],
         request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
         &mut state,
     );
@@ -139,6 +159,7 @@ fn user_prompt_submit_debounces_repeats_within_the_configured_window() {
 
     let third = claude_code_hook_response(
         &graph,
+        &[],
         request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
         &mut state,
     );
@@ -146,6 +167,7 @@ fn user_prompt_submit_debounces_repeats_within_the_configured_window() {
 
     let fourth = claude_code_hook_response(
         &graph,
+        &[],
         request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
         &mut state,
     );
@@ -163,6 +185,7 @@ fn session_start_returns_only_must_read_standards() {
 
     let response = claude_code_hook_response(
         &graph,
+        &[],
         request(ClaudeCodeEvent::SessionStart, None, 0),
         &mut state,
     )
@@ -186,6 +209,7 @@ fn session_start_returns_none_when_no_standard_is_must_read() {
 
     let response = claude_code_hook_response(
         &graph,
+        &[],
         request(ClaudeCodeEvent::SessionStart, None, 0),
         &mut state,
     );
@@ -204,9 +228,94 @@ fn session_start_is_unaffected_by_debounce_state() {
 
     let response = claude_code_hook_response(
         &graph,
+        &[],
         request(ClaudeCodeEvent::SessionStart, None, 3),
         &mut state,
     );
 
     assert!(response.is_some());
+}
+
+#[test]
+fn user_prompt_submit_nudges_a_skill_when_its_keyword_matches() {
+    let graph = build_graph(vec![]).expect("graph builds");
+    let skills = vec![skill("debugging", &["broken", "failing test"])];
+    let mut state = SessionState::default();
+
+    let response = claude_code_hook_response(
+        &graph,
+        &skills,
+        request(ClaudeCodeEvent::UserPromptSubmit, Some("this is broken"), 0),
+        &mut state,
+    )
+    .expect("a skill keyword match should produce output");
+
+    let context = additional_context(&response);
+    assert!(context.contains("Skill(s) that may help"));
+    assert!(context.contains("debugging: Description for debugging."));
+}
+
+#[test]
+fn user_prompt_submit_returns_none_when_no_skill_keyword_matches() {
+    let graph = build_graph(vec![]).expect("graph builds");
+    let skills = vec![skill("debugging", &["broken"])];
+    let mut state = SessionState::default();
+
+    let response = claude_code_hook_response(
+        &graph,
+        &skills,
+        request(
+            ClaudeCodeEvent::UserPromptSubmit,
+            Some("unrelated wording"),
+            0,
+        ),
+        &mut state,
+    );
+
+    assert_eq!(response, None);
+}
+
+#[test]
+fn skill_nudges_debounce_independently_of_a_same_named_standard() {
+    let graph =
+        build_graph(vec![standard("shared-id", &["trigger"], false)]).expect("graph builds");
+    let skills = vec![skill("shared-id", &["trigger"])];
+    let mut state = SessionState::default();
+    let prompt = Some("trigger this");
+
+    let first = claude_code_hook_response(
+        &graph,
+        &skills,
+        request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
+        &mut state,
+    )
+    .expect("first prompt should match both the standard and the skill");
+    assert!(additional_context(&first).contains("shared-id"));
+
+    let second = claude_code_hook_response(
+        &graph,
+        &skills,
+        request(ClaudeCodeEvent::UserPromptSubmit, prompt, 3),
+        &mut state,
+    );
+    assert_eq!(
+        second, None,
+        "both the standard and the skill should be debounced on the second prompt"
+    );
+}
+
+#[test]
+fn session_start_never_nudges_skills() {
+    let graph = build_graph(vec![]).expect("graph builds");
+    let skills = vec![skill("debugging", &[])];
+    let mut state = SessionState::default();
+
+    let response = claude_code_hook_response(
+        &graph,
+        &skills,
+        request(ClaudeCodeEvent::SessionStart, None, 0),
+        &mut state,
+    );
+
+    assert_eq!(response, None);
 }

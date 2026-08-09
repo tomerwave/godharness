@@ -1,6 +1,8 @@
 ---
 name: receiving-code-review
 description: Verify review feedback against the codebase before implementing it — technical correctness over performative agreement or blind compliance.
+keywords: [review feedback, reviewer said, review comment, code review]
+paths: []
 ---
 
 # Receiving Code Review

@@ -1,6 +1,8 @@
 ---
 name: frontend-design
 description: Give new or reshaped UI a distinctive, intentional aesthetic direction, then audit it against known AI-generated design tells before calling it done.
+keywords: []
+paths: ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/*.css", "**/*.scss"]
 ---
 
 # Frontend Design
