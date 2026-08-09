@@ -122,6 +122,10 @@ godharness doctor
 - `context` resolves the standards and decisions relevant to a prompt or set
   of changed paths in a deterministic machine-readable form.
 - `doctor` validates local installation and adapter wiring.
+- `stats` shows which standards and skills have actually been injected into
+  this repository's sessions and their approximate token cost, recorded
+  locally (`~/.godharness/usage/`, never committed to the repo) whenever a
+  hook adapter fires.
 
 ### Installing
 
