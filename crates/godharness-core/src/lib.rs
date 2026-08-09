@@ -8,6 +8,7 @@ pub mod doctor;
 mod error;
 pub mod graph;
 pub mod init;
+pub mod pricing;
 pub mod registry;
 pub mod resolve;
 pub mod skill;
@@ -29,6 +30,10 @@ pub use check::{
 pub use doctor::{DoctorReport, run_doctor};
 pub use graph::{EdgeKind, GraphError, StandardGraph, build_graph, content_hash};
 pub use init::{InitError, InitReport, run_init};
+pub use pricing::{
+    CostReport, ModelCostEntry, ModelRate, estimate_cost, rate_for, snapshot_fetched_at,
+    snapshot_source,
+};
 pub use resolve::{
     ResolvedSkill, ResolvedStandard, resolve, resolve_by_keyword_only, resolve_skills,
     resolve_skills_by_keyword_only,
@@ -36,8 +41,8 @@ pub use resolve::{
 pub use skill::{Skill, SkillError, parse_skill};
 pub use standard::{Standard, StandardError, keyword_matches, parse_standard, path_matches};
 pub use stats::{
-    StatEntry, UsageEvent, UsageKind, aggregate, append_events, approx_tokens, read_events,
-    usage_log_path,
+    StatEntry, UsageEvent, UsageKind, aggregate, append_events, approx_tokens, backfill_model,
+    read_events, usage_log_path,
 };
 pub use suite::{recommended_v1, recommended_v1_skills};
 pub use update::{UpdateError, UpdateReport, update_repository};

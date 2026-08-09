@@ -15,6 +15,10 @@ pub struct UsageEvent {
     pub kind: UsageKind,
     pub id: String,
     pub approx_tokens: u32,
+    #[serde(default)]
+    pub model: Option<String>,
+    #[serde(default)]
+    pub session_id: Option<String>,
 }
 
 pub fn approx_tokens(text: &str) -> u32 {
@@ -68,6 +72,25 @@ pub fn read_events(path: &Path) -> Vec<UsageEvent> {
         .lines()
         .filter_map(|line| serde_json::from_str(line).ok())
         .collect()
+}
+
+fn needs_backfill(event: &UsageEvent, session_id: &str) -> bool {
+    event.model.is_none() && event.session_id.as_deref() == Some(session_id)
+}
+
+pub fn backfill_model(path: &Path, session_id: &str, model: &str) -> std::io::Result<()> {
+    let mut events = read_events(path);
+    let mut changed = false;
+    for event in &mut events {
+        if needs_backfill(event, session_id) {
+            event.model = Some(model.to_string());
+            changed = true;
+        }
+    }
+    if !changed {
+        return Ok(());
+    }
+    std::fs::write(path, serialize_events(&events))
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]

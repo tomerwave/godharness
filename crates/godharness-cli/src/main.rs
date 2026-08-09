@@ -5,6 +5,8 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand, ValueEnum};
 use godharness_core::{ClaudeCodeEvent, SessionState};
 
+mod stats;
+
 #[derive(Parser)]
 #[command(
     name = "godharness",
@@ -68,6 +70,11 @@ enum Command {
         json: bool,
         #[arg(long, help = "Clear the recorded usage log for this repository.")]
         reset: bool,
+        #[arg(
+            long,
+            help = "Price every recorded token as if it ran on this model instead of the model auto-detected per event."
+        )]
+        model: Option<String>,
     },
 }
 
@@ -97,10 +104,11 @@ impl AdapterTool {
     }
 }
 
-#[derive(Clone, Copy, ValueEnum)]
+#[derive(Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum AdapterHookEvent {
     UserPromptSubmit,
     SessionStart,
+    Stop,
 }
 
 impl From<AdapterHookEvent> for ClaudeCodeEvent {
@@ -108,47 +116,13 @@ impl From<AdapterHookEvent> for ClaudeCodeEvent {
         match event {
             AdapterHookEvent::UserPromptSubmit => ClaudeCodeEvent::UserPromptSubmit,
             AdapterHookEvent::SessionStart => ClaudeCodeEvent::SessionStart,
+            AdapterHookEvent::Stop => unreachable!("Stop is handled before this conversion"),
         }
     }
 }
 
 fn current_dir() -> PathBuf {
     std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
-}
-
-fn now_unix() -> u64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|duration| duration.as_secs())
-        .unwrap_or(0)
-}
-
-fn record_usage(
-    standards: &[godharness_core::ResolvedStandard],
-    skills: &[godharness_core::ResolvedSkill],
-) {
-    let Some(path) = usage_log_path_for_cwd() else {
-        return;
-    };
-    let timestamp_unix = now_unix();
-    let mut events: Vec<godharness_core::UsageEvent> = Vec::new();
-    for standard in standards {
-        events.push(godharness_core::UsageEvent {
-            timestamp_unix,
-            kind: godharness_core::UsageKind::Standard,
-            id: standard.id.clone(),
-            approx_tokens: godharness_core::approx_tokens(&standard.rule),
-        });
-    }
-    for skill in skills {
-        events.push(godharness_core::UsageEvent {
-            timestamp_unix,
-            kind: godharness_core::UsageKind::Skill,
-            id: skill.id.clone(),
-            approx_tokens: godharness_core::approx_tokens(&skill.description),
-        });
-    }
-    let _ = godharness_core::append_events(&path, &events);
 }
 
 fn run_init() -> ExitCode {
@@ -262,6 +236,7 @@ fn save_session_state(session_id: &str, state: &SessionState) {
 struct HookInputs {
     prompt: Option<String>,
     session_id: Option<String>,
+    transcript_path: Option<String>,
 }
 
 fn read_hook_inputs(event: AdapterHookEvent) -> HookInputs {
@@ -269,11 +244,12 @@ fn read_hook_inputs(event: AdapterHookEvent) -> HookInputs {
     let _ = std::io::stdin().read_to_string(&mut input);
     let prompt = match event {
         AdapterHookEvent::UserPromptSubmit => stdin_field(&input, "prompt"),
-        AdapterHookEvent::SessionStart => None,
+        AdapterHookEvent::SessionStart | AdapterHookEvent::Stop => None,
     };
     HookInputs {
         prompt,
         session_id: stdin_field(&input, "session_id"),
+        transcript_path: stdin_field(&input, "transcript_path"),
     }
 }
 
@@ -288,14 +264,22 @@ fn load_config_or_default(root: &std::path::Path) -> godharness_core::Config {
 }
 
 fn finish_hook(
-    session_id: Option<&str>,
+    root: &std::path::Path,
+    inputs: &HookInputs,
     state: &SessionState,
     result: godharness_core::HookResult,
 ) {
-    if let Some(session_id) = session_id {
+    if let Some(session_id) = inputs.session_id.as_deref() {
         save_session_state(session_id, state);
     }
-    record_usage(&result.standards, &result.skills);
+    let model = stats::detect_current_model(inputs.transcript_path.as_deref());
+    stats::record_usage(stats::RecordUsage {
+        root,
+        standards: &result.standards,
+        skills: &result.skills,
+        model: model.as_deref(),
+        session_id: inputs.session_id.as_deref(),
+    });
     if let Some(response) = result.response {
         println!("{response}");
     }
@@ -303,8 +287,15 @@ fn finish_hook(
 
 fn run_adapter_hook(_tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
     let inputs = read_hook_inputs(event);
-
     let root = current_dir();
+    if event == AdapterHookEvent::Stop {
+        return stats::run_stop_hook(
+            &root,
+            inputs.session_id.as_deref(),
+            inputs.transcript_path.as_deref(),
+        );
+    }
+
     let Ok(graph) = godharness_core::load_repository_graph(&root) else {
         return ExitCode::SUCCESS;
     };
@@ -322,7 +313,7 @@ fn run_adapter_hook(_tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
         reinject_after_prompts: config.reinject_after_prompts,
     };
     let result = godharness_core::claude_code_hook_response(&graph, &skills, request, &mut state);
-    finish_hook(inputs.session_id.as_deref(), &state, result);
+    finish_hook(&root, &inputs, &state, result);
 
     ExitCode::SUCCESS
 }
@@ -356,64 +347,6 @@ fn run_adapters_enable(tool: AdapterTool) -> ExitCode {
     }
 }
 
-fn usage_log_path_for_cwd() -> Option<PathBuf> {
-    let home = dirs::home_dir()?;
-    let repo_root = current_dir().canonicalize().ok()?;
-    Some(godharness_core::usage_log_path(&home, &repo_root))
-}
-
-fn print_stats_table(entries: &[godharness_core::StatEntry]) {
-    if entries.is_empty() {
-        println!("godharness stats: no recorded usage yet for this repository");
-        return;
-    }
-
-    let total_tokens: u64 = entries.iter().map(|entry| entry.total_approx_tokens).sum();
-    let total_fires: u32 = entries.iter().map(|entry| entry.fires).sum();
-
-    println!(
-        "{:<10} {:<40} {:>8} {:>18}",
-        "kind", "id", "fires", "approx tokens"
-    );
-    for entry in entries {
-        let kind = match entry.kind {
-            godharness_core::UsageKind::Standard => "standard",
-            godharness_core::UsageKind::Skill => "skill",
-        };
-        println!(
-            "{:<10} {:<40} {:>8} {:>18}",
-            kind, entry.id, entry.fires, entry.total_approx_tokens
-        );
-    }
-    println!(
-        "\n~{total_tokens} approx tokens spent on injected context across {total_fires} recorded firing(s)"
-    );
-}
-
-fn run_stats(json: bool, reset: bool) -> ExitCode {
-    let Some(path) = usage_log_path_for_cwd() else {
-        eprintln!("godharness stats: could not resolve a home directory");
-        return ExitCode::FAILURE;
-    };
-
-    if reset {
-        let _ = std::fs::remove_file(&path);
-        println!("godharness stats: usage log cleared");
-        return ExitCode::SUCCESS;
-    }
-
-    let entries = godharness_core::aggregate(&godharness_core::read_events(&path));
-
-    if json {
-        let output = serde_json::to_string(&entries).unwrap_or_else(|_| "[]".to_string());
-        println!("{output}");
-        return ExitCode::SUCCESS;
-    }
-
-    print_stats_table(&entries);
-    ExitCode::SUCCESS
-}
-
 fn run_update() -> ExitCode {
     match godharness_core::update_repository(&current_dir()) {
         Ok(report) => {
@@ -444,6 +377,8 @@ fn main() -> ExitCode {
             action: AdaptersCommand::Enable { tool },
         } => run_adapters_enable(tool),
         Command::Update => run_update(),
-        Command::Stats { json, reset } => run_stats(json, reset),
+        Command::Stats { json, reset, model } => {
+            stats::run_stats(&current_dir(), json, reset, model)
+        }
     }
 }

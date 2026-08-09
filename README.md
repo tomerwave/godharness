@@ -125,7 +125,10 @@ godharness doctor
 - `stats` shows which standards and skills have actually been injected into
   this repository's sessions and their approximate token cost, recorded
   locally (`~/.godharness/usage/`, never committed to the repo) whenever a
-  hook adapter fires.
+  hook adapter fires. Also estimates dollar cost using a bundled models.dev
+  pricing snapshot — auto-detected per event from the session transcript
+  where available, or hypothetically via `--model <id>` to compare what the
+  same usage would cost on a different model.
 
 ### Installing
 

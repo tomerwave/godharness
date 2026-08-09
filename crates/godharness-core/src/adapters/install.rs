@@ -104,7 +104,8 @@ fn add_hook_entries(document: &mut Value, tool_arg: &str) -> Result<bool, Instal
         "SessionStart",
         &hook_command(tool_arg, "session-start"),
     )?;
-    Ok(submit_added || start_added)
+    let stop_added = add_hook_entry(document, "Stop", &hook_command(tool_arg, "stop"))?;
+    Ok(submit_added || start_added || stop_added)
 }
 
 fn write_hook_config(path: &Path, document: &Value) -> Result<(), InstallError> {
