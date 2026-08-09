@@ -277,6 +277,30 @@ fn read_hook_inputs(event: AdapterHookEvent) -> HookInputs {
     }
 }
 
+fn load_config_or_default(root: &std::path::Path) -> godharness_core::Config {
+    godharness_core::load_config(root).unwrap_or_else(|_| godharness_core::Config {
+        version: 1,
+        suites: Vec::new(),
+        standards: Vec::new(),
+        adapters: Default::default(),
+        reinject_after_prompts: 0,
+    })
+}
+
+fn finish_hook(
+    session_id: Option<&str>,
+    state: &SessionState,
+    result: godharness_core::HookResult,
+) {
+    if let Some(session_id) = session_id {
+        save_session_state(session_id, state);
+    }
+    record_usage(&result.standards, &result.skills);
+    if let Some(response) = result.response {
+        println!("{response}");
+    }
+}
+
 fn run_adapter_hook(_tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
     let inputs = read_hook_inputs(event);
 
@@ -284,13 +308,7 @@ fn run_adapter_hook(_tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
     let Ok(graph) = godharness_core::load_repository_graph(&root) else {
         return ExitCode::SUCCESS;
     };
-    let config = godharness_core::load_config(&root).unwrap_or_else(|_| godharness_core::Config {
-        version: 1,
-        suites: Vec::new(),
-        standards: Vec::new(),
-        adapters: Default::default(),
-        reinject_after_prompts: 0,
-    });
+    let config = load_config_or_default(&root);
     let skills = godharness_core::load_suite_skills(&config);
     let mut state = inputs
         .session_id
@@ -304,14 +322,7 @@ fn run_adapter_hook(_tool: AdapterTool, event: AdapterHookEvent) -> ExitCode {
         reinject_after_prompts: config.reinject_after_prompts,
     };
     let result = godharness_core::claude_code_hook_response(&graph, &skills, request, &mut state);
-
-    if let Some(session_id) = inputs.session_id.as_deref() {
-        save_session_state(session_id, &state);
-    }
-    record_usage(&result.standards, &result.skills);
-    if let Some(response) = result.response {
-        println!("{response}");
-    }
+    finish_hook(inputs.session_id.as_deref(), &state, result);
 
     ExitCode::SUCCESS
 }
@@ -351,30 +362,10 @@ fn usage_log_path_for_cwd() -> Option<PathBuf> {
     Some(godharness_core::usage_log_path(&home, &repo_root))
 }
 
-fn run_stats(json: bool, reset: bool) -> ExitCode {
-    let Some(path) = usage_log_path_for_cwd() else {
-        eprintln!("godharness stats: could not resolve a home directory");
-        return ExitCode::FAILURE;
-    };
-
-    if reset {
-        let _ = std::fs::remove_file(&path);
-        println!("godharness stats: usage log cleared");
-        return ExitCode::SUCCESS;
-    }
-
-    let events = godharness_core::read_events(&path);
-    let entries = godharness_core::aggregate(&events);
-
-    if json {
-        let output = serde_json::to_string(&entries).unwrap_or_else(|_| "[]".to_string());
-        println!("{output}");
-        return ExitCode::SUCCESS;
-    }
-
+fn print_stats_table(entries: &[godharness_core::StatEntry]) {
     if entries.is_empty() {
         println!("godharness stats: no recorded usage yet for this repository");
-        return ExitCode::SUCCESS;
+        return;
     }
 
     let total_tokens: u64 = entries.iter().map(|entry| entry.total_approx_tokens).sum();
@@ -384,7 +375,7 @@ fn run_stats(json: bool, reset: bool) -> ExitCode {
         "{:<10} {:<40} {:>8} {:>18}",
         "kind", "id", "fires", "approx tokens"
     );
-    for entry in &entries {
+    for entry in entries {
         let kind = match entry.kind {
             godharness_core::UsageKind::Standard => "standard",
             godharness_core::UsageKind::Skill => "skill",
@@ -397,7 +388,29 @@ fn run_stats(json: bool, reset: bool) -> ExitCode {
     println!(
         "\n~{total_tokens} approx tokens spent on injected context across {total_fires} recorded firing(s)"
     );
+}
 
+fn run_stats(json: bool, reset: bool) -> ExitCode {
+    let Some(path) = usage_log_path_for_cwd() else {
+        eprintln!("godharness stats: could not resolve a home directory");
+        return ExitCode::FAILURE;
+    };
+
+    if reset {
+        let _ = std::fs::remove_file(&path);
+        println!("godharness stats: usage log cleared");
+        return ExitCode::SUCCESS;
+    }
+
+    let entries = godharness_core::aggregate(&godharness_core::read_events(&path));
+
+    if json {
+        let output = serde_json::to_string(&entries).unwrap_or_else(|_| "[]".to_string());
+        println!("{output}");
+        return ExitCode::SUCCESS;
+    }
+
+    print_stats_table(&entries);
     ExitCode::SUCCESS
 }
 

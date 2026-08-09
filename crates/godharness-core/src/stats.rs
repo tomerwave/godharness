@@ -17,9 +17,6 @@ pub struct UsageEvent {
     pub approx_tokens: u32,
 }
 
-/// A rough, dependency-free estimate: ~4 characters per token for English text.
-/// Not exact - real tokenizers vary per model - but stable, free, and good enough
-/// to compare which standards/skills are expensive relative to each other.
 pub fn approx_tokens(text: &str) -> u32 {
     ((text.chars().count() as f64) / 4.0).ceil() as u32
 }
@@ -37,13 +34,7 @@ pub fn usage_log_path(home: &Path, repo_root: &Path) -> PathBuf {
         .join(format!("{}.jsonl", sanitize_path_component(repo_root)))
 }
 
-pub fn append_events(path: &Path, events: &[UsageEvent]) -> std::io::Result<()> {
-    if events.is_empty() {
-        return Ok(());
-    }
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
+fn serialize_events(events: &[UsageEvent]) -> String {
     let mut lines = String::new();
     for event in events {
         if let Ok(line) = serde_json::to_string(event) {
@@ -51,12 +42,22 @@ pub fn append_events(path: &Path, events: &[UsageEvent]) -> std::io::Result<()> 
             lines.push('\n');
         }
     }
+    lines
+}
+
+pub fn append_events(path: &Path, events: &[UsageEvent]) -> std::io::Result<()> {
+    if events.is_empty() {
+        return Ok(());
+    }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
     use std::io::Write;
     let mut file = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
         .open(path)?;
-    file.write_all(lines.as_bytes())
+    file.write_all(serialize_events(events).as_bytes())
 }
 
 pub fn read_events(path: &Path) -> Vec<UsageEvent> {
