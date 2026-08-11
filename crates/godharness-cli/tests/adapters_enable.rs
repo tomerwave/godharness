@@ -67,5 +67,5 @@ fn enable_claude_code_installs_skills_via_the_real_binary() {
             .exists()
     );
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("15 skill(s) installed"));
+    assert!(stdout.contains("16 skill(s) installed"));
 }

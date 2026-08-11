@@ -76,7 +76,7 @@ fn load_suite_skills_resolves_recommended_v1() {
 
     let skills = load_suite_skills(&config);
 
-    assert_eq!(skills.len(), 15);
+    assert_eq!(skills.len(), 16);
 }
 
 #[test]
