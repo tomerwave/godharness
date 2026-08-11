@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before `1.0`, a `0.x` release may
 change the CLI surface or configuration schema.
 
+## [Unreleased]
+
+### Added
+
+- `recommended@1` gained `define-goal` (adapted from `openai/skills`): shapes a fuzzy request
+  into a concrete, measurable objective — outcome, verification evidence, and scope boundary —
+  before multi-step work starts. Auto-triggers on goal/success-criteria keywords. 16 skills
+  total (was 15).
+
 ## [0.1.6] - 2026-08-09
 
 ### Added

@@ -104,11 +104,11 @@ fn must_read_standards() {
 fn recommended_v1_skills_all_parse_with_unique_ids() {
     let skills = recommended_v1_skills();
 
-    assert_eq!(skills.len(), 15);
+    assert_eq!(skills.len(), 16);
     let mut ids: Vec<&str> = skills.iter().map(|skill| skill.id.as_str()).collect();
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), 15);
+    assert_eq!(ids.len(), 16);
 }
 
 #[test]
