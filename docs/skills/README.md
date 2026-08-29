@@ -1,6 +1,6 @@
 # Skills
 
-The 15 skills godharness installs as part of `recommended@1` are real, spec-compliant
+The 31 skills godharness installs as part of `recommended@1` are real, spec-compliant
 `SKILL.md` files under `crates/godharness-core/skills/` — that directory is the source of
 truth, not this one. `godharness adapters enable`/`update` write them into whichever tool a
 repo has enabled (`.claude/skills/` for Claude Code, `.agents/skills/` for Codex).
@@ -20,3 +20,32 @@ repo has enabled (`.claude/skills/` for Claude Code, `.agents/skills/` for Codex
 - [retrospective-workflow-review](../../crates/godharness-core/skills/retrospective-workflow-review/SKILL.md)
 - [clarify-before-building](../../crates/godharness-core/skills/clarify-before-building/SKILL.md)
 - [doubt-driven-development](../../crates/godharness-core/skills/doubt-driven-development/SKILL.md)
+- [define-goal](../../crates/godharness-core/skills/define-goal/SKILL.md)
+
+## `refactor-ux` — gated UI/UX refactor chain
+
+A 12-step chain for putting a fast-built, existing product through a real UI/UX pass and
+ICP-aligned user journeys. Only step 1 auto-triggers on relevant prompts; each later step is
+reached by finishing the previous step's exit gate and being invoked by name.
+
+- [refactor-ux-01-frame-session](../../crates/godharness-core/skills/refactor-ux-01-frame-session/SKILL.md)
+- [refactor-ux-02-confirm-goal](../../crates/godharness-core/skills/refactor-ux-02-confirm-goal/SKILL.md)
+- [refactor-ux-03-draft-journeys](../../crates/godharness-core/skills/refactor-ux-03-draft-journeys/SKILL.md)
+- [refactor-ux-04-icp-panel-journeys](../../crates/godharness-core/skills/refactor-ux-04-icp-panel-journeys/SKILL.md)
+- [refactor-ux-05-color-scheme](../../crates/godharness-core/skills/refactor-ux-05-color-scheme/SKILL.md)
+- [refactor-ux-06-mock-iterate](../../crates/godharness-core/skills/refactor-ux-06-mock-iterate/SKILL.md)
+- [refactor-ux-07-consolidate](../../crates/godharness-core/skills/refactor-ux-07-consolidate/SKILL.md)
+- [refactor-ux-08-framework-doctor](../../crates/godharness-core/skills/refactor-ux-08-framework-doctor/SKILL.md)
+- [refactor-ux-09-build](../../crates/godharness-core/skills/refactor-ux-09-build/SKILL.md)
+- [refactor-ux-10-icp-panel-look](../../crates/godharness-core/skills/refactor-ux-10-icp-panel-look/SKILL.md)
+- [refactor-ux-11-final-pass](../../crates/godharness-core/skills/refactor-ux-11-final-pass/SKILL.md)
+- [refactor-ux-12-finalize-docs](../../crates/godharness-core/skills/refactor-ux-12-finalize-docs/SKILL.md)
+
+## `design-new` — gated new/early-stage design chain
+
+A 3-step chain for setting a design direction before code accumulates around an undecided
+one. Routes to/from `refactor-ux` for a product that later needs a full refactor.
+
+- [design-new-01-design-doc](../../crates/godharness-core/skills/design-new-01-design-doc/SKILL.md)
+- [design-new-02-frontend-design](../../crates/godharness-core/skills/design-new-02-frontend-design/SKILL.md)
+- [design-new-03-icp-panel-look](../../crates/godharness-core/skills/design-new-03-icp-panel-look/SKILL.md)

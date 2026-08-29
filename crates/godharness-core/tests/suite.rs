@@ -1,6 +1,7 @@
 use godharness_core::{build_graph, recommended_v1, recommended_v1_skills};
 
 const RECOMMENDED_V1_STANDARD_COUNT: usize = 31;
+const RECOMMENDED_V1_SKILL_COUNT: usize = 31;
 
 #[test]
 fn recommended_v1_ids_are_unchanged_by_the_registry_refactor() {
@@ -104,11 +105,11 @@ fn must_read_standards() {
 fn recommended_v1_skills_all_parse_with_unique_ids() {
     let skills = recommended_v1_skills();
 
-    assert_eq!(skills.len(), 16);
+    assert_eq!(skills.len(), RECOMMENDED_V1_SKILL_COUNT);
     let mut ids: Vec<&str> = skills.iter().map(|skill| skill.id.as_str()).collect();
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), 16);
+    assert_eq!(ids.len(), RECOMMENDED_V1_SKILL_COUNT);
 }
 
 #[test]

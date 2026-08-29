@@ -137,12 +137,12 @@ fn enabling_an_unknown_tool_returns_an_error() {
 }
 
 #[test]
-fn enabling_claude_code_installs_all_four_recommended_skills() {
+fn enabling_claude_code_installs_all_recommended_skills() {
     let root = temp_root("skills-claude-code");
 
     let report = enable_adapter(&root.path, "claude-code").expect("enable adapter");
 
-    assert_eq!(report.skills_installed.len(), 16);
+    assert_eq!(report.skills_installed.len(), 31);
     assert!(
         root.path
             .join(".claude/skills/atomic-commits/SKILL.md")
@@ -159,7 +159,7 @@ fn enabling_codex_installs_skills_under_dot_agents_skills() {
 
     let report = enable_adapter(&root.path, "codex").expect("enable adapter");
 
-    assert_eq!(report.skills_installed.len(), 16);
+    assert_eq!(report.skills_installed.len(), 31);
     assert!(
         root.path
             .join(".agents/skills/property-based-testing/SKILL.md")
