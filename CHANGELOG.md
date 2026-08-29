@@ -6,6 +6,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before `1.0`, a `0.x` release may
 change the CLI surface or configuration schema.
 
+## [0.1.8] - 2026-08-29
+
+### Added
+
+- `recommended@1` gained two gated skill chains: `refactor-ux` (12 steps) for putting an
+  existing product through a real UI/UX pass and defining ICP-aligned user journeys, and
+  `design-new` (3 steps) for setting design direction on a new or early-stage product. Only
+  each chain's first step auto-triggers; every later step is reached by finishing the
+  previous step's written exit gate and being invoked by name. Both chains' ICP-panel steps
+  read persona definitions from a shared `icp.md`, and both close by writing `design.md`
+  (`refactor-ux`) or invoking `simplify`. 31 skills total (was 16).
+
 ## [0.1.7] - 2026-08-11
 
 ### Added
